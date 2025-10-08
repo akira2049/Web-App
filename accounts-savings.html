@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Savings Accounts — Shanto Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="products.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand"><span class="logo">SB</span><span class="brand-text">Shanto Bank</span></div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="products.html">Products</a>
+        <a href="#" aria-current="page">Savings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding:24px 0 60px;">
+    <div class="header-row">
+      <h1 style="color:#4b248c;margin:0;">Savings Account</h1>
+      <div class="search">
+        <input type="search" id="search" placeholder="Search" />
+      </div>
+    </div>
+
+    <div class="segmented">
+      <button class="seg active" data-seg="personal">Personal</button>
+      <button class="seg" data-seg="business">Business</button>
+      <button class="seg" data-seg="women">Women</button>
+    </div>
+
+    <div id="list" class="account-list">
+      <a class="account-card" data-tags="personal" href="account-ebl-classic-savings.html">
+        <h3>EBL Classic Savings</h3>
+        <p>A savings account with the highest rate in its class.</p>
+        <span class="cta">Apply Now</span>
+      </a>
+      <a class="account-card" data-tags="personal" href="account-ebl-max-saver.html">
+        <h3>EBL Max Saver</h3>
+        <p>Security and growth of a savings account with unlimited transactions.</p>
+        <span class="cta">Apply Now</span>
+      </a>
+      <a class="account-card" data-tags="business women" href="#">
+        <h3>EBL Women’s Savings</h3>
+        <p>Preferential benefits designed for women entrepreneurs.</p>
+        <span class="cta">Apply Now</span>
+      </a>
+    </div>
+
+    <p class="help-text">Select an account to view benefits and requirements.</p>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Shanto Bank.</p>
+    </div>
+  </footer>
+  <script src="scripts.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Segmented control + search filter
+    const segButtons = document.querySelectorAll('.seg');
+    let activeSeg = 'personal';
+    function applyFilters(){
+      const term = (document.getElementById('search').value || '').toLowerCase();
+      document.querySelectorAll('.account-card').forEach(card=>{
+        const matchesSeg = card.dataset.tags.includes(activeSeg);
+        const matchesSearch = card.textContent.toLowerCase().includes(term);
+        card.style.display = (matchesSeg && matchesSearch) ? '' : 'none';
+      });
+    }
+    segButtons.forEach(btn=>btn.addEventListener('click',()=>{
+      segButtons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active'); activeSeg = btn.dataset.seg; applyFilters();
+    }));
+    document.getElementById('search').addEventListener('input', applyFilters);
+    applyFilters();
+  </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products — Shanto Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="products.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand">
+        <span class="logo">SB</span><span class="brand-text">Shanto Bank</span>
+      </div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="products.html" aria-current="page">Products</a>
+        <a href="open-account.html">Open an Account</a>
+        <a href="signup.html">Sign Up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding:26px 0 60px;">
+    <h1 style="color:#4b248c;margin:0 0 18px;">Products</h1>
+
+    <div class="products-grid">
+      <a class="product-tile" href="accounts-savings.html">
+        <div class="p-ico" aria-hidden="true">🏦</div>
+        <h3>Savings Account</h3>
+        <p>Grow your money with flexible choices.</p>
+      </a>
+      <a class="product-tile" href="accounts-current.html">
+        <div class="p-ico" aria-hidden="true">🏛️</div>
+        <h3>Current Account</h3>
+        <p>Everyday banking for businesses & individuals.</p>
+      </a>
+      <a class="product-tile" href="accounts-fixed.html">
+        <div class="p-ico" aria-hidden="true">💰</div>
+        <h3>Fixed Deposit</h3>
+        <p>Guaranteed returns for set tenors.</p>
+      </a>
+      <a class="product-tile" href="accounts-dps.html">
+        <div class="p-ico" aria-hidden="true">🪙</div>
+        <h3>DPS</h3>
+        <p>Deposit a little each month, build big goals.</p>
+      </a>
+      <a class="product-tile" href="accounts-loan.html">
+        <div class="p-ico" aria-hidden="true">💵</div>
+        <h3>Loan</h3>
+        <p>Personal, home, auto, and more.</p>
+      </a>
+      <a class="product-tile" href="accounts-cards.html">
+        <div class="p-ico" aria-hidden="true">💳</div>
+        <h3>Cards</h3>
+        <p>Credit & debit with rewards.</p>
+      </a>
+      <a class="product-tile" href="accounts-nrb.html">
+        <div class="p-ico" aria-hidden="true">🌏</div>
+        <h3>NRB</h3>
+        <p>Solutions for Non‑Resident Bangladeshis.</p>
+      </a>
+      <a class="product-tile" href="accounts-bancassurance.html">
+        <div class="p-ico" aria-hidden="true">☂️</div>
+        <h3>EBL Bancassurance</h3>
+        <p>Insurance options through partners.</p>
+      </a>
+      <a class="product-tile" href="accounts-others.html">
+        <div class="p-ico" aria-hidden="true">⋯</div>
+        <h3>Other Services</h3>
+        <p>Remittance, lockers, digital banking & more.</p>
+      </a>
+    </div>
+
+    <div style="margin-top:6px"></div>
+    <p class="help-text" style="margin-top:12px;">Click a product to see available accounts in that category.</p>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Shanto Bank.</p>
+    </div>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Asian Air Bank — Customer Portal</title>
+  <meta name="description" content="Asian Air Bank customer banking portal homepage" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #0f152b;
+      --soft: #121a38;
+      --text: #e8eefc;
+      --muted: #a8b3cf;
+      --brand: #4f8cff;
+      --brand-2: #7c5cff;
+      --green: #36d399;
+      --red: #ff6b6b;
+      --amber: #ffd166;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f7f8fc;
+        --panel: #ffffff;
+        --soft: #f2f4fb;
+        --text: #0e1325;
+        --muted: #5b647a;
+        --brand: #2f6bff;
+        --brand-2: #7a42ff;
+        --green: #0e9f6e;
+        --red: #e03131;
+        --amber: #c79400;
+        --shadow: 0 10px 24px rgba(2, 7, 62, 0.08);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(79,140,255,.18), transparent),
+                  radial-gradient(800px 600px at 110% 10%, rgba(124,92,255,.18), transparent),
+                  var(--bg);
+      line-height: 1.4;
+    }
+
+    /* Layout */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: saturate(1.2) blur(8px);
+      background: color-mix(in oklab, var(--bg) 72%, transparent);
+      border-bottom: 1px solid color-mix(in oklab, var(--text) 12%, transparent);
+    }
+    .nav {
+      max-width: 1200px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 14px;
+    }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px; }
+    .brand-badge {
+      width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-weight: 800;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; box-shadow: var(--shadow);
+    }
+    .nav-actions { margin-left: auto; display:flex; align-items: center; gap: 8px; }
+    .nav a { color: var(--muted); text-decoration: none; font-weight: 500; padding: 8px 10px; border-radius: 10px; }
+    .nav a[aria-current="page"] { color: var(--text); background: color-mix(in oklab, var(--text) 8%, transparent); }
+
+    .btn { border: 0; padding: 10px 14px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; }
+    .btn-outline { color: var(--text); background: transparent; border: 1px solid color-mix(in oklab, var(--text) 16%, transparent); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px 64px; }
+
+    .hero {
+      display: grid; grid-template-columns: 1.3fr .7fr; gap: 24px; align-items: stretch;
+    }
+    .hero-left { background: linear-gradient(180deg, color-mix(in oklab, var(--panel) 92%, transparent), var(--panel)); border: 1px solid color-mix(in oklab, var(--text) 12%, transparent); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .hero-left .headline { font-size: clamp(26px, 3vw, 36px); margin: 4px 0 6px; letter-spacing: .2px; }
+    .eyebrow { display:inline-flex; align-items:center; gap: 8px; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .16em; }
+    .hero-left .sub { color: var(--muted); max-width: 60ch; }
+    .hero-cta { display:flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+    .glass {
+      background: color-mix(in oklab, var(--soft) 80%, transparent);
+      border: 1px solid color-mix(in oklab, var(--text) 10%, transparent);
+      border-radius: 14px; padding: 14px; box-shadow: var(--shadow);
+    }
+
+    .account-grid { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .kpi { display:flex; align-items:center; gap: 12px; }
+    .kpi .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--brand); box-shadow: 0 0 0 6px color-mix(in oklab, var(--brand) 15%, transparent); }
+    .kpi .value { font-size: 20px; font-weight: 700; }
+    .kpi small { color: var(--muted); font-weight: 600; }
+
+    .hero-right { display: grid; grid-auto-rows: min-content; gap: 14px; }
+    .quick-action { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .qa { display:flex; flex-direction: column; gap: 10px; }
+    .qa button { width: 100%; }
+
+    .card { background: var(--panel); border: 1px solid color-mix(in oklab, var(--text) 12%, transparent); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .card h3 { margin: 0 0 8px; font-size: 16px; }
+
+    .acc-list { display: grid; gap: 10px; }
+    .acc { display:flex; align-items: center; justify-content: space-between; padding: 14px; border-radius: 12px; background: var(--soft); border: 1px solid color-mix(in oklab, var(--text) 10%, transparent); }
+    .acc .left { display:flex; align-items:center; gap:12px; }
+    .badge { font-size: 12px; padding: 4px 8px; border-radius: 9999px; border: 1px solid color-mix(in oklab, var(--text) 18%, transparent); color: var(--muted); }
+
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px dashed color-mix(in oklab, var(--text) 14%, transparent); }
+    th { color: var(--muted); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing:.12em; }
+    td { font-size: 14px; }
+    .t-amount.pos { color: var(--green); font-weight: 700; }
+    .t-amount.neg { color: var(--red); font-weight: 700; }
+
+    .ann { display:flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: 12px; background: var(--soft); border: 1px solid color-mix(in oklab, var(--text) 10%, transparent); }
+    .ann svg { flex: 0 0 auto; }
+
+    footer { margin-top: 36px; padding: 24px 0 60px; color: var(--muted); }
+    footer .row { display:flex; flex-wrap: wrap; gap: 14px; align-items:center; justify-content: space-between; }
+
+    .pill { display:inline-flex; align-items:center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: color-mix(in oklab, var(--text) 10%, transparent); color: var(--muted); font-weight: 600; }
+
+    /* Modal */
+    dialog { border: none; border-radius: 18px; padding: 0; width: min(480px, 92vw); background: var(--panel); color: var(--text); box-shadow: var(--shadow); }
+    .modal { padding: 20px; }
+    .modal header { position: unset; backdrop-filter: none; background: transparent; border:0; padding:0; }
+    .modal h2 { margin: 0 0 10px; }
+    .field { display:flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+    .field input, .field select {
+      padding: 12px 12px; border-radius: 12px; border: 1px solid color-mix(in oklab, var(--text) 18%, transparent); background: var(--soft); color: var(--text);
+    }
+    .modal-actions { display:flex; gap: 10px; justify-content:flex-end; margin-top: 12px; }
+
+    /* Utilities */
+    .sr-only { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+    .flex { display:flex; }
+    .gap-8 { gap: 8px; }
+    .gap-12 { gap: 12px; }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .account-grid { grid-template-columns: 1fr; }
+      .quick-action { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Nav -->
+  <header>
+    <nav class="nav" aria-label="Primary">
+      <div class="brand" aria-label="Asian Air Bank">
+        <div class="brand-badge" aria-hidden="true">SB</div>
+        <span>Asian Air Bank</span>
+      </div>
+      <a href="#" aria-current="page">Home</a>
+      <a href="#accounts">Accounts</a>
+      <a href="#payments">Payments</a>
+      <a href="#support">Support</a>
+      <div class="nav-actions">
+        <button class="btn btn-outline" id="themeToggle" aria-pressed="false" aria-label="Toggle theme">Theme</button>
+        <button class="btn btn-primary" id="loginBtn">Sign In</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container" id="main" tabindex="-1">
+    <!-- Hero -->
+    <section class="hero" aria-label="Overview">
+      <div class="hero-left">
+        <span class="eyebrow">Welcome back</span>
+        <h1 class="headline">Your money, organized and protected.</h1>
+        <p class="sub">Manage accounts, move money, pay bills, and track spending in one secure place. Encryption at rest and in transit, real‑time alerts, and biometric sign‑in supported on mobile.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" id="openAccount">Open an Account</button>
+          <button class="btn btn-outline" id="newTransfer">New Transfer</button>
+          <span class="pill" title="Last login">
+            <!-- clock icon -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 8v5l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="lastLogin">Last login: just now</span>
+          </span>
+        </div>
+
+        <div class="account-grid">
+          <div class="glass">
+            <div class="kpi"><span class="dot"></span><div>
+              <div class="value" id="totalBalance">$24,120.84</div>
+              <small>Total balance</small>
+            </div></div>
+          </div>
+          <div class="glass">
+            <div class="kpi"><span class="dot" style="background:var(--green); box-shadow:0 0 0 6px color-mix(in oklab, var(--green) 18%, transparent)"></span><div>
+              <div class="value" id="savingsRate">4.35% APY</div>
+              <small>Savings rate</small>
+            </div></div>
+          </div>
+          <div class="glass">
+            <div class="kpi"><span class="dot" style="background:var(--amber); box-shadow:0 0 0 6px color-mix(in oklab, var(--amber) 22%, transparent)"></span><div>
+              <div class="value" id="rewards">12,480 pts</div>
+              <small>Rewards</small>
+            </div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="card" id="accounts">
+          <h3>Accounts</h3>
+          <div class="acc-list" id="accountList" aria-live="polite"></div>
+        </div>
+
+        <div class="card" id="quickActions">
+          <h3>Quick Actions</h3>
+          <div class="quick-action">
+            <div class="qa">
+              <button class="btn btn-outline" data-action="pay-bill">Pay a Bill</button>
+              <button class="btn btn-outline" data-action="transfer">Transfer Money</button>
+            </div>
+            <div class="qa">
+              <button class="btn btn-outline" data-action="deposit">Mobile Deposit</button>
+              <button class="btn btn-outline" data-action="card">Card Controls</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-2" aria-label="Activity and Insights">
+      <div class="card" id="payments">
+        <h3>Recent Activity</h3>
+        <table aria-describedby="recentHelp">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="txBody"></tbody>
+        </table>
+        <p id="recentHelp" class="sr-only">A list of your most recent transactions</p>
+      </div>
+
+      <div class="card">
+        <h3>Announcements</h3>
+        <div class="ann">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 9v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2"/></svg>
+          <div>
+            <strong>Scheduled maintenance</strong>
+            <p class="muted">Online banking may be intermittently unavailable on Oct 12, 01:00–03:00 AM (UTC+06:00).</p>
+          </div>
+        </div>
+        <div class="ann" style="margin-top:10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 5h18M7 5v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V5" stroke="currentColor" stroke-width="2"/><path d="M9 9h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <div>
+            <strong>New: 2% cashback card</strong>
+            <p class="muted">Apply in minutes and track virtual card numbers from your dashboard.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer id="support">
+      <div class="row">
+        <div class="flex gap-12">
+          <span class="pill">© <span id="year"></span> Asian Air Bank</span>
+          <a class="pill" href="#" role="button">Privacy</a>
+          <a class="pill" href="#" role="button">Security</a>
+          <a class="pill" href="#" role="button">Terms</a>
+        </div>
+        <div class="flex gap-12">
+          <span class="pill" title="Hotline">24/7 Support</span>
+          <a class="pill" href="#" role="button">Live chat</a>
+          <a class="pill" href="#" role="button">Email</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Login Modal -->
+  <dialog id="loginModal" aria-labelledby="loginTitle">
+    <form method="dialog" class="modal" id="loginForm">
+      <header>
+        <h2 id="loginTitle">Secure Sign In</h2>
+        <p class="muted" style="color:var(--muted)">Use your customer ID to access the portal.</p>
+      </header>
+      <div class="field">
+        <label for="cid">Customer ID</label>
+        <input id="cid" name="cid" inputmode="numeric" autocomplete="username" pattern="[0-9]{6,12}" placeholder="e.g., 102938" required />
+      </div>
+      <div class="field">
+        <label for="pass">Password</label>
+        <input id="pass" name="pass" type="password" autocomplete="current-password" required />
+      </div>
+      <div class="field">
+        <label for="otp">One‑time code (optional)</label>
+        <input id="otp" name="otp" inputmode="numeric" pattern="[0-9]{6}" placeholder="6‑digit code" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" value="cancel">Cancel</button>
+        <button class="btn btn-primary" value="login">Sign In</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Transfer Modal -->
+  <dialog id="transferModal" aria-labelledby="transferTitle">
+    <form method="dialog" class="modal" id="transferForm">
+      <header>
+        <h2 id="transferTitle">New Transfer</h2>
+        <p class="muted" style="color:var(--muted)">Move money between your accounts or to a saved recipient.</p>
+      </header>
+      <div class="field">
+        <label for="fromAcc">From</label>
+        <select id="fromAcc" name="fromAcc" required></select>
+      </div>
+      <div class="field">
+        <label for="toAcc">To</label>
+        <select id="toAcc" name="toAcc" required></select>
+      </div>
+      <div class="field">
+        <label for="amount">Amount</label>
+        <input id="amount" name="amount" inputmode="decimal" placeholder="0.00" required />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" value="cancel">Cancel</button>
+        <button class="btn btn-primary" value="submit">Send</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    // Accessibility helpers
+    function trapFocus(dialog) {
+      const focusable = dialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      function handle(e) {
+        if (e.key === 'Tab') {
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      }
+      dialog.addEventListener('keydown', handle);
+      return () => dialog.removeEventListener('keydown', handle);
+    }
+
+    const fmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
+
+    const state = {
+      accounts: [
+        { id: 'CHK-8612', name: 'Everyday Checking', type: 'Checking', balance: 2412.21, mask: '••8612' },
+        { id: 'SVG-4309', name: 'High‑Yield Savings', type: 'Savings', balance: 18200.63, mask: '••4309' },
+        { id: 'CRD-9931', name: 'Cashback Card', type: 'Credit', balance: -492.00, limit: 5000, mask: '••9931' }
+      ],
+      tx: [
+        { date: '2025-10-08', desc: 'Salary – Asian Air Corp', cat: 'Income', amount: +3200.00 },
+        { date: '2025-10-07', desc: 'Electricity Bill', cat: 'Utilities', amount: -78.34 },
+        { date: '2025-10-07', desc: 'Groceries – FreshMart', cat: 'Groceries', amount: -132.19 },
+        { date: '2025-10-06', desc: 'Coffee – BeanThere', cat: 'Dining', amount: -5.60 },
+        { date: '2025-10-06', desc: 'ATM Cash Withdrawal', cat: 'Cash', amount: -100.00 },
+      ]
+    };
+
+    // Populate UI
+    function renderAccounts() {
+      const list = document.getElementById('accountList');
+      list.innerHTML = '';
+      state.accounts.forEach(acc => {
+        const el = document.createElement('div');
+        el.className = 'acc';
+        el.innerHTML = `
+          <div class="left">
+            <div class="brand-badge" style="width:34px;height:34px;border-radius:9px">${acc.type[0]}</div>
+            <div>
+              <div style="font-weight:700">${acc.name}</div>
+              <div class="badge">${acc.mask}</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700">${fmt.format(acc.balance)}</div>
+            <small class="muted">${acc.type}</small>
+          </div>
+        `;
+        list.appendChild(el);
+      });
+
+      // Update total
+      const total = state.accounts.reduce((s, a) => s + a.balance, 0);
+      document.getElementById('totalBalance').textContent = fmt.format(total);
+    }
+
+    function renderTx() {
+      const body = document.getElementById('txBody');
+      body.innerHTML = '';
+      state.tx.forEach(t => {
+        const tr = document.createElement('tr');
+        const amtClass = t.amount >= 0 ? 'pos' : 'neg';
+        tr.innerHTML = `
+          <td>${new Date(t.date).toLocaleDateString()}</td>
+          <td>${t.desc}</td>
+          <td>${t.cat}</td>
+          <td class="t-amount ${amtClass}">${t.amount >= 0 ? '+' : ''}${fmt.format(Math.abs(t.amount))}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    // Theme toggle (persisted)
+    const themeBtn = document.getElementById('themeToggle');
+    function applyTheme(mode) {
+      document.documentElement.dataset.theme = mode; // Allow hooking if needed
+      themeBtn.setAttribute('aria-pressed', mode === 'dark');
+    }
+    themeBtn.addEventListener('click', () => {
+      const current = localStorage.getItem('theme') || 'auto';
+      const next = current === 'dark' ? 'light' : current === 'light' ? 'auto' : 'dark';
+      localStorage.setItem('theme', next);
+      applyTheme(next);
+      themeBtn.textContent = next === 'auto' ? 'Theme' : `${next[0].toUpperCase()+next.slice(1)} mode`;
+    });
+    (function initTheme(){
+      const prefDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const saved = localStorage.getItem('theme');
+      const mode = saved === 'auto' || !saved ? (prefDark ? 'dark' : 'light') : saved;
+      applyTheme(mode);
+    })();
+
+    // Modals
+    const loginBtn = document.getElementById('loginBtn');
+    const loginModal = document.getElementById('loginModal');
+    const transferModal = document.getElementById('transferModal');
+    const newTransfer = document.getElementById('newTransfer');
+    let untrap = null;
+
+    function openModal(modal, firstFieldSelector) {
+      modal.showModal();
+      untrap = trapFocus(modal);
+      const first = modal.querySelector(firstFieldSelector);
+      first && first.focus();
+    }
+    function closeModal(modal) {
+      modal.close();
+      untrap && untrap();
+    }
+
+    loginBtn.addEventListener('click', () => openModal(loginModal, '#cid'));
+    document.getElementById('openAccount').addEventListener('click', () => openModal(loginModal, '#cid'));
+
+    newTransfer.addEventListener('click', () => {
+      // Fill selects
+      const from = document.getElementById('fromAcc');
+      const to = document.getElementById('toAcc');
+      from.innerHTML = '';
+      to.innerHTML = '';
+      state.accounts.forEach(a => {
+        const opt1 = document.createElement('option');
+        opt1.value = a.id; opt1.textContent = `${a.name} (${a.mask})`;
+        from.appendChild(opt1);
+        const opt2 = document.createElement('option');
+        opt2.value = a.id; opt2.textContent = `${a.name} (${a.mask})`;
+        to.appendChild(opt2);
+      });
+      openModal(transferModal, '#fromAcc');
+    });
+
+    // Form handling (demo only)
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      const data = Object.fromEntries(new FormData(e.target));
+      if (e.submitter?.value === 'login') {
+        if (!e.target.reportValidity()) return;
+        // Simulate success
+        closeModal(loginModal);
+        document.getElementById('lastLogin').textContent = 'Last login: just now (demo)';
+        alert('Signed in (demo).');
+      } else {
+        closeModal(loginModal);
+      }
+    });
+
+    document.getElementById('transferForm').addEventListener('submit', (e) => {
+      if (e.submitter?.value === 'submit') {
+        if (!e.target.reportValidity()) return;
+        const data = Object.fromEntries(new FormData(e.target));
+        if (data.fromAcc === data.toAcc) { alert('Please choose two different accounts.'); return; }
+        const amt = parseFloat(String(data.amount).replace(/[^0-9.\-]/g, '')) || 0;
+        const from = state.accounts.find(a => a.id === data.fromAcc);
+        const to = state.accounts.find(a => a.id === data.toAcc);
+        from.balance -= amt;
+        to.balance += amt;
+        renderAccounts();
+        state.tx.unshift({ date: new Date().toISOString().slice(0,10), desc: `Transfer: ${from.name} → ${to.name}`, cat: 'Transfer', amount: 0 });
+        renderTx();
+        closeModal(transferModal);
+        alert('Transfer submitted (demo).');
+      } else {
+        closeModal(transferModal);
+      }
+    });
+
+    // Init
+    function init() {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      renderAccounts();
+      renderTx();
+    }
+    init();
+  </script>
+</body>
+</html>

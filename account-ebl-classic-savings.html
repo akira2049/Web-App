@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EBL Classic Savings — Shanto Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand"><span class="logo">SB</span><span class="brand-text">Shanto Bank</span></div>
+      <nav class="nav">
+        <a href="products.html">Products</a>
+        <a href="accounts-savings.html">Savings</a>
+        <a href="#" aria-current="page">EBL Classic Savings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding:26px 0 60px;">
+    <h1>EBL Classic Savings</h1>
+    <p class="muted">Savings Account</p>
+
+    <div class="detail-layout">
+      <div class="detail-main">
+        <p>A Savings Account with the highest rate in its class. It’s best for you if you have low need for withdrawal.</p>
+        <h2>Features</h2>
+        <ul class="bullets">
+          <li>Standard Savings Account</li>
+          <li>Interest applicable at BDT 50,000</li>
+          <li>Interest paid half‑yearly</li>
+          <li>Comes with Visa Debit Card & Cheque Book facility</li>
+        </ul>
+
+        <h2>What you will need to apply</h2>
+        <ul class="bullets">
+          <li>Any resident Bangladeshi individual</li>
+          <li>Age 18 years and above</li>
+          <li>Photograph of account holder and nominee</li>
+          <li>Copy of National ID / Passport / Driving License</li>
+        </ul>
+      </div>
+
+      <aside class="detail-aside">
+        <a class="btn btn-accent" href="open-account.html">Apply Now →</a>
+        <p class="help-text">Application continues in our secure portal.</p>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner"><p>© <span id="year"></span> Shanto Bank.</p></div>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

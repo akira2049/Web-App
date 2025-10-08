@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cards — Shanto Bank</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="products.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand"><span class="logo">SB</span><span class="brand-text">Shanto Bank</span></div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="products.html">Products</a>
+        <a href="#" aria-current="page">Cards</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding:24px 0 60px;">
+    <div class="header-row">
+      <h1 style="color:#4b248c;margin:0;">Cards</h1>
+      <div class="search"><input type="search" id="search" placeholder="Search" /></div>
+    </div>
+    
+    <div id="list" class="account-list">
+      
+        <a class="account-card" href="account-card-visa-gold.html">
+          <h3>Visa Gold Credit Card</h3>
+          <p>Rewards, EMI options, and exclusive partner offers.</p><span class="cta">Apply Now</span>
+        </a>
+        <a class="account-card" href="account-card-debit.html">
+          <h3>Visa Debit Card</h3>
+          <p>Free ATM withdrawals and instant payments.</p><span class="cta">Apply Now</span>
+        </a>
+        
+    </div>
+    <p class="help-text">Select an account to view benefits and requirements.</p>
+  </main>
+
+  <footer class="footer"><div class="container footer-inner"><p>© <span id="year"></span> Shanto Bank.</p></div></footer>
+  <script src="scripts.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const segButtons = document.querySelectorAll('.seg');
+    let activeSeg = segButtons.length ? segButtons[0].dataset.seg : null;
+    function applyFilters(){
+      const term = (document.getElementById('search').value || '').toLowerCase();
+      document.querySelectorAll('.account-card').forEach(card=>{
+        const matchesSeg = !activeSeg || card.dataset.tags?.includes(activeSeg);
+        const matchesSearch = card.textContent.toLowerCase().includes(term);
+        card.style.display = (matchesSeg && matchesSearch) ? '' : 'none';
+      });
+    }
+    segButtons.forEach(btn=>btn.addEventListener('click',()=>{ segButtons.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); activeSeg = btn.dataset.seg; applyFilters(); }));
+    document.getElementById('search').addEventListener('input', applyFilters);
+    applyFilters();
+  </script>
+</body>
+</html>

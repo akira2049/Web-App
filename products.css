@@ -1,0 +1,60 @@
+
+/* products.css — styles for product grid, account lists, and detail pages */
+:root{
+  --primary:#5a2ea6;
+  --accent:#f0d95a;
+  --shadow:0 10px 25px rgba(0,0,0,.12);
+}
+
+.container{ width:min(1100px, 92vw); margin:0 auto; }
+
+/* Grid of product tiles */
+.products-grid{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;
+}
+.product-tile{
+  background:#fff; border:1px solid #eee; border-radius:18px; padding:18px;
+  text-decoration:none; color:inherit; box-shadow:var(--shadow);
+  display:flex; flex-direction:column; gap:6px; transition:transform .12s, box-shadow .12s;
+}
+.product-tile:hover{ transform:translateY(-2px); box-shadow:0 16px 28px rgba(0,0,0,.14) }
+.product-tile h3{ margin:6px 0; color:#2a2a38 }
+.p-ico{ font-size:28px }
+
+/* Header row (title + search) */
+.header-row{ display:flex; align-items:center; justify-content:space-between; gap:16px }
+.search input[type=search]{
+  border:1px solid #d9d9e0; border-radius:999px; padding:10px 14px; min-width:220px; outline:none;
+}
+
+/* Segmented control */
+.segmented{ display:flex; gap:8px; margin:14px 0 10px }
+.seg{
+  border:1px solid #e5e1ff; background:#fff; color:#4b248c; border-radius:999px; padding:8px 14px; font-weight:600; cursor:pointer;
+}
+.seg.active{ background:var(--accent); color:#1b1b1f; border-color:var(--accent) }
+
+/* Account list */
+.account-list{ display:grid; gap:12px }
+.account-card{
+  background:#fff; border:1px solid #eee; border-radius:16px; padding:16px; text-decoration:none; color:inherit;
+  box-shadow:var(--shadow); display:grid; grid-template-columns:1fr auto; align-items:center;
+}
+.account-card h3{ margin:0 0 6px; color:#30304a }
+.account-card p{ margin:0; color:#676775 }
+.account-card .cta{ color:#4b248c; font-weight:700 }
+
+/* Details page layout */
+.detail-layout{ display:grid; grid-template-columns: 1.2fr .8fr; gap:24px }
+.detail-main h2{ margin:16px 0 8px }
+.bullets{ padding-left:18px }
+.detail-aside{ align-self:start; background:#fff; border:1px solid #eee; border-radius:16px; padding:16px; box-shadow:var(--shadow) }
+.muted{ color:#666; margin:0 0 10px }
+
+@media (max-width: 900px){
+  .products-grid{ grid-template-columns:1fr 1fr }
+  .detail-layout{ grid-template-columns:1fr }
+}
+@media (max-width: 560px){
+  .products-grid{ grid-template-columns:1fr }
+}

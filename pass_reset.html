@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forgot Password - Banking Portal</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      width: 350px;
+      text-align: center;
+    }
+    h2 { color: #00416A; margin-bottom: 20px; }
+    .input-group { margin-bottom: 20px; text-align: left; }
+    .input-group label { display: block; font-weight: bold; margin-bottom: 6px; }
+    .input-group input {
+      width: 100%; padding: 10px; border: 1px solid #ccc;
+      border-radius: 8px; font-size: 14px;
+    }
+    .input-group input:focus {
+      border-color: #00416A;
+      outline: none;
+      box-shadow: 0 0 6px rgba(0,65,106,0.3);
+    }
+    .btn {
+      width: 100%; padding: 12px;
+      background: #00416A; border: none;
+      border-radius: 8px; color: #fff; font-size: 16px;
+      cursor: pointer; transition: 0.3s;
+    }
+    .btn:hover { background: #006699; }
+    .extra-links { margin-top: 15px; font-size: 14px; }
+    .extra-links a { color: #00416A; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Forgot Password</h2>
+    <p style="margin-bottom:15px;">Enter your registered email or Customer ID to reset your password.</p>
+    <form>
+      <div class="input-group">
+        <label for="email">Email / Customer ID</label>
+        <input type="text" id="email" placeholder="Enter your email or ID" required>
+      </div>
+      <button type="submit" class="btn">Reset Password</button>
+    </form>
+    <div class="extra-links">
+      <p><a href="login.html">Back to Login</a></p>
+    </div>
+  </div>
+</body>
+</html>

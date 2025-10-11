@@ -1,11 +1,11 @@
 /* styles.css — external stylesheet */
 :root{
-  --bg: #f3e48a;         /* warm yellow like the mockup */
-  --bg-strong:#f0d95a;
-  --primary:#5a2ea6;     /* royal purple */
-  --primary-700:#4b248c;
+  --bg: #ffffff;         /* warm yellow like the mockup */
+  --bg-strong:#ffffff;
+  --primary:#222223;     /* royal purple */
+  --primary-700:#212121;
   --ink:#1b1b1f;
-  --muted:#5e5e6a;
+  --muted:#2b2b2b;
   --surface:#ffffff;
   --card:#fffbdf;
   --radius:18px;

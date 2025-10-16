@@ -1,0 +1,109 @@
+/* Fund Transfer — external stylesheet */
+:root{
+  --bg:#ffffff;
+  --surface:#ffffff;
+  --ink:#1b1b1f;
+  --muted:#70737a;
+  --primary:#222223;     /* dashboard navbar black */
+  --primary-600:#2f2f31;
+  --border:#e7e7ea;
+  --radius:18px;
+  --shadow:0 10px 25px rgba(0,0,0,.10);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  color:var(--ink);
+  background:var(--bg);
+}
+
+.app{
+  max-width:980px;
+  margin-inline:auto;
+  padding:24px 16px 64px;
+}
+
+.topbar{
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:18px; color:var(--muted); font-weight:600;
+}
+.topbar .step{margin-left:auto; color:var(--muted); font-size:14px}
+
+.h1{font-size:28px; font-weight:800; color:var(--primary); margin:4px 0 16px}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+.grid{
+  display:grid; gap:14px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+@media (max-width:720px){ .grid{grid-template-columns:1fr;} }
+
+.opt{
+  padding:18px;
+  display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; transition:transform .08s ease;
+}
+.opt:hover{ transform:translateY(-2px); }
+.opt .title{font-weight:700; color:var(--primary);}
+.opt small{color:var(--muted);}
+
+.linkish{color:var(--primary); text-decoration:none; font-weight:700}
+.linkrow{display:flex; justify-content:flex-end; margin-top:6px}
+
+.section{padding:18px}
+.row{display:grid; grid-template-columns:160px 1fr; gap:14px; align-items:center; margin-bottom:14px;}
+@media (max-width:640px){ .row{grid-template-columns:1fr; } }
+
+.label{color:var(--muted); font-weight:700;}
+.input, select, textarea{
+  width:100%; padding:14px 12px; border:1px solid var(--border);
+  border-radius:12px; font-size:15px; background:#fff;
+}
+.input[disabled]{background:#f6f6f7; color:#8b8e95}
+
+.ahd{display:flex; align-items:center; gap:12px; padding:14px; border:1px dashed var(--border); border-radius:12px; background:#fafafa}
+.ahd .name{font-weight:800; color:var(--primary)}
+
+.amounts{display:flex; gap:10px; flex-wrap:wrap}
+.chip{
+  padding:10px 14px; border:1px solid var(--border); border-radius:999px;
+  background:#fff; font-weight:700; cursor:pointer;
+}
+.chip:focus, .chip:hover{outline:2px solid var(--primary); outline-offset:2px}
+
+.total{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+  padding:14px; border:1px solid var(--border); border-radius:12px; background:#fbfbfc;
+}
+
+.kv{color:var(--muted); font-size:14px}
+.kv b{color:var(--primary)}
+
+.veri-grid{display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr))}
+.vcard{
+  padding:16px; border:1.5px solid var(--border); border-radius:14px; cursor:pointer;
+}
+.vcard input{margin-right:8px}
+.vcard.active{border-color:var(--primary);}
+
+.btn{
+  display:inline-flex; justify-content:center; align-items:center; gap:10px;
+  padding:14px 18px; border:none; border-radius:14px; font-weight:800; font-size:16px;
+  background:var(--primary); color:#fff; cursor:pointer;
+}
+.btn:disabled{opacity:.6; cursor:not-allowed}
+.footerbar{position:sticky; bottom:0; background:var(--bg); padding-top:18px}
+.footerbar .btn{width:100%}
+
+.note{color:var(--muted); font-size:13px}
+
+.mask{letter-spacing:1px; font-variant-numeric:tabular-nums}

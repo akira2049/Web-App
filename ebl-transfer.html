@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>DBL Account Transfer — Step 1</title>
+  <link rel="stylesheet" href="transfer.css">
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="fund-transfer_ui.html">← Back</a>
+      <span class="step">1 / 2</span>
+    </div>
+    <div class="h1">DBL Account Transfer</div>
+    <div class="card">
+      <div class="section">
+
+        <div class="row">
+          <div class="label">Transfer From</div>
+          <select>
+            <option>Acc. 14512400000072</option>
+            <option>Acc. 14512400000073</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="label">Transfer To (Beneficiary)</div>
+          <select id="beneficiary">
+            <option value="1451440004887" selected>1451440004887</option>
+            <option value="1451440011223">1451440011223</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="label">Account Holder</div>
+          <div class="ahd">
+            <div style="font-size:28px">👤</div>
+            <div>
+              <div class="name" id="ahName">SHAMIMA AKTER</div>
+              <div class="kv">To Acc: <span class="mask" id="ahAcc">1451440004887</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">Transfer Amount</div>
+          <div>
+            <input class="input" id="amount" type="number" inputmode="decimal" placeholder="৳ 0.00" value="200000">
+            <div class="amounts" style="margin-top:10px">
+              <button class="chip" data-a="500">৳ 500</button>
+              <button class="chip" data-a="5000">৳ 5000</button>
+              <button class="chip" data-a="10000">৳ 10000</button>
+              <button class="chip" data-a="20000">৳ 20000</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">Notes</div>
+          <input class="input" placeholder="EBL Transfer">
+        </div>
+
+        <div class="footerbar">
+          <a class="btn" id="next" href="ebl-transfer-overview.html">Next</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // quick amount chips
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>{ document.getElementById('amount').value = c.dataset.a; });
+  });
+  // mock beneficiary → name
+  const names = {
+    "1451440004887":"SHAMIMA AKTER",
+    "1451440011223":"MD RAHAT H."
+  };
+  const bene = document.getElementById('beneficiary');
+  bene.addEventListener('change', ()=>{
+    document.getElementById('ahName').textContent = names[bene.value] || "Beneficiary";
+    document.getElementById('ahAcc').textContent = bene.value;
+  });
+</script>
+</body>
+</html>

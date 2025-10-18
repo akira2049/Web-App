@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Select or Enter Mobile Number</title>
+  <link rel="stylesheet" href="transfer.css">
+  <style>
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px solid var(--border);border-radius:14px;background:#fff;cursor:pointer}
+    .left{display:flex;align-items:center;gap:12px}
+    .nm{font-weight:800;color:var(--primary)}
+    .ph{color:var(--muted)}
+    .new-wrap{display:flex;gap:8px;margin:0 0 12px 0}
+    .new-wrap input{flex:1}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="recharge.html">← Back</a>
+    </div>
+    <div class="h1">Select or Enter mobile number</div>
+
+    <div class="card">
+      <div class="section">
+        <div class="new-wrap">
+          <input class="input" id="manual" placeholder="+8801XXXXXXXXX">
+          <button class="btn" id="save">→</button>
+        </div>
+
+        <div class="list">
+          <div class="item" data-msisdn="01717-356928">
+            <div class="left"><div>👤</div><div><div class="nm">Abba</div><div class="ph">01717-356928</div></div></div><div>›</div>
+          </div>
+          <div class="item" data-msisdn="+8801601-874131">
+            <div class="left"><div>👤</div><div><div class="nm">Abir</div><div class="ph">+8801601-874131</div></div></div><div>›</div>
+          </div>
+          <div class="item" data-msisdn="01977-833488">
+            <div class="left"><div>👤</div><div><div class="nm">Alam</div><div class="ph">01977-833488</div></div></div><div>›</div>
+          </div>
+          <div class="item" data-msisdn="01302-495293">
+            <div class="left"><div>👤</div><div><div class="nm">Alimul</div><div class="ph">01302-495293</div></div></div><div>›</div>
+          </div>
+          <div class="item" data-msisdn="01760-454690">
+            <div class="left"><div>👤</div><div><div class="nm">Amma</div><div class="ph">01760-454690</div></div></div><div>›</div>
+          </div>
+          <div class="item" data-msisdn="01719-383843">
+            <div class="left"><div>👤</div><div><div class="nm">Ammarul Hostel</div><div class="ph">01719-383843</div></div></div><div>›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function pick(msisdn){
+    localStorage.setItem('re_msisdn', msisdn);
+    location.href = 'recharge.html';
+  }
+  document.querySelectorAll('.item').forEach(el=>{
+    el.addEventListener('click', ()=> pick(el.dataset.msisdn));
+  });
+  document.getElementById('save').addEventListener('click', ()=>{
+    const v = document.getElementById('manual').value.trim();
+    if(!v){ alert('Enter a number'); return; }
+    pick(v);
+  });
+</script>
+</body>
+</html>

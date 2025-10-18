@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Select Beneficiary — EBL</title>
+  <link rel="stylesheet" href="transfer.css">
+  <style>
+    .hint{color:var(--muted); margin-bottom:8px}
+    .picker-list{display:flex; flex-direction:column; gap:10px}
+    .item{display:flex; align-items:center; justify-content:space-between; padding:14px; border:1px solid var(--border); border-radius:14px; cursor:pointer; background:#fff}
+    .left{display:flex; align-items:center; gap:12px}
+    .ic{font-size:20px}
+    .nm{font-weight:800; color:var(--primary)}
+    .mask{color:var(--muted); font-weight:800; letter-spacing:1px}
+    .new-wrap{display:flex; gap:8px; margin:12px 0 6px}
+    .new-wrap input{flex:1}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="ebl-transfer.html">← Back</a>
+    </div>
+    <div class="h1">Transfer To</div>
+
+    <div class="card">
+      <div class="section">
+        <div class="hint">Transfer to your preferred EBL account</div>
+
+        <div class="new-wrap">
+          <input class="input" id="newAcc" placeholder="Enter account no. for new beneficiary">
+          <button class="btn" id="addBtn" style="white-space:nowrap">→</button>
+        </div>
+
+        <div class="picker-list" id="list">
+          <div class="item" data-acc="1451440001302" data-name="KAZI PORASH">
+            <div class="left">
+              <div class="ic">👤</div>
+              <div>
+                <div><span class="mask">** 1302</span> | <span class="nm">KAZI PORASH</span></div>
+              </div>
+            </div>
+            <div>›</div>
+          </div>
+
+          <div class="item" data-acc="1451440004887" data-name="SHAMIMA AKTER">
+            <div class="left">
+              <div class="ic">👤</div>
+              <div>
+                <div><span class="mask">** 4887</span> | <span class="nm">SHAMIMA AKTER</span></div>
+              </div>
+            </div>
+            <div>›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function setChoice(acc, name){
+    const last4 = acc.slice(-4);
+    localStorage.setItem('beneAcc', acc);
+    localStorage.setItem('beneName', name);
+    localStorage.setItem('beneMask', '** ' + last4);
+    location.href = 'ebl-transfer.html';
+  }
+
+  document.querySelectorAll('.item').forEach(it=>{
+    it.addEventListener('click', ()=> setChoice(it.dataset.acc, it.dataset.name));
+  });
+
+  document.getElementById('addBtn').addEventListener('click', ()=>{
+    const acc = document.getElementById('newAcc').value.replace(/\s+/g,'');
+    if(acc.length < 8) { alert('Please enter a valid account number.'); return; }
+    setChoice(acc, 'New Beneficiary');
+  });
+</script>
+</body>
+</html>

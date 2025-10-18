@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>DBL Account Transfer — Step 1</title>
+  <title>EBL Account Transfer — Step 1</title>
   <link rel="stylesheet" href="transfer.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
       <a class="linkish" href="fund-transfer_ui.html">← Back</a>
       <span class="step">1 / 2</span>
     </div>
-    <div class="h1">DBL Account Transfer</div>
+    <div class="h1">EBL Account Transfer</div>
     <div class="card">
       <div class="section">
 
@@ -25,19 +25,21 @@
 
         <div class="row">
           <div class="label">Transfer To (Beneficiary)</div>
-          <select id="beneficiary">
-            <option value="1451440004887" selected>1451440004887</option>
-            <option value="1451440011223">1451440011223</option>
-          </select>
+          <div>
+            <button class="input" id="openPicker" style="text-align:left; display:flex; justify-content:space-between; align-items:center">
+              <span id="pickText" style="color:#999;">Select beneficiary</span>
+              <span>›</span>
+            </button>
+          </div>
         </div>
 
         <div class="row">
           <div class="label">Account Holder</div>
-          <div class="ahd">
+          <div class="ahd" id="holderInfo" style="display:none;">
             <div style="font-size:28px">👤</div>
             <div>
-              <div class="name" id="ahName">SHAMIMA AKTER</div>
-              <div class="kv">To Acc: <span class="mask" id="ahAcc">1451440004887</span></div>
+              <div class="name" id="ahName"></div>
+              <div class="kv">To Acc: <span class="mask" id="ahAcc"></span></div>
             </div>
           </div>
         </div>
@@ -45,7 +47,7 @@
         <div class="row">
           <div class="label">Transfer Amount</div>
           <div>
-            <input class="input" id="amount" type="number" inputmode="decimal" placeholder="৳ 0.00" value="200000">
+            <input class="input" id="amount" type="number" inputmode="decimal" placeholder="৳ 0.00">
             <div class="amounts" style="margin-top:10px">
               <button class="chip" data-a="500">৳ 500</button>
               <button class="chip" data-a="5000">৳ 5000</button>
@@ -72,15 +74,26 @@
   document.querySelectorAll('.chip').forEach(c=>{
     c.addEventListener('click', ()=>{ document.getElementById('amount').value = c.dataset.a; });
   });
-  // mock beneficiary → name
-  const names = {
-    "1451440004887":"SHAMIMA AKTER",
-    "1451440011223":"MD RAHAT H."
-  };
-  const bene = document.getElementById('beneficiary');
-  bene.addEventListener('change', ()=>{
-    document.getElementById('ahName').textContent = names[bene.value] || "Beneficiary";
-    document.getElementById('ahAcc').textContent = bene.value;
+
+  // hydrate from localStorage if present
+  (function(){
+    const acc = localStorage.getItem('beneAcc');
+    const name = localStorage.getItem('beneName');
+    const mask = localStorage.getItem('beneMask');
+
+    if (acc && name) {
+      document.getElementById('pickText').innerHTML = `<span>${mask}</span> | <b>${name}</b>`;
+      document.getElementById('ahName').textContent = name;
+      document.getElementById('ahAcc').textContent = acc;
+      document.getElementById('holderInfo').style.display = 'flex';
+    } else {
+      document.getElementById('pickText').textContent = "Select beneficiary";
+      document.getElementById('holderInfo').style.display = 'none';
+    }
+  })();
+
+  document.getElementById('openPicker').addEventListener('click', ()=>{
+    location.href = 'ebl-transfer-to.html';
   });
 </script>
 </body>

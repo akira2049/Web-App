@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mobile Recharge — Step 1</title>
+  <link rel="stylesheet" href="transfer.css">
+  <style>
+    .tabs{display:flex;gap:8px;margin:6px 0 12px}
+    .tab{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--primary);cursor:pointer;font-weight:700}
+    .tab.active{outline:2px solid var(--primary);outline-offset:2px}
+    .quick{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .pickerBtn{display:flex;justify-content:space-between;align-items:center}
+    .next-disabled{opacity:.5;pointer-events:none}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="fund-transfer.html">← Back</a>
+      <span class="step">1 / 2</span>
+    </div>
+    <div class="h1">Mobile Recharge</div>
+
+    <div class="card">
+      <div class="section">
+
+        <div class="row">
+          <div class="label">Pay From</div>
+          <select id="payFrom">
+            <option value="" selected>Select account or card</option>
+            <option value="14512400000072">Acc. 14512400000072</option>
+            <option value="14512400000073">Acc. 14512400000073</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="label">Recharge Number</div>
+          <div>
+            <button class="input pickerBtn" id="openContacts" style="text-align:left">
+              <span id="msisdnHint" style="color:#999">Select/Enter Mobile Number</span>
+              <span>›</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">Recharge Option :</div>
+          <div>
+            <div class="tabs">
+              <button class="tab" data-t="history">History</button>
+              <button class="tab active" data-t="recharge">Recharge</button>
+              <button class="tab" data-t="internet">Internet</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">৳ Recharge Amount</div>
+          <div>
+            <input class="input" id="amount" type="number" inputmode="decimal" placeholder="৳ Enter amount here">
+            <div class="quick">
+              <button class="chip" data-a="20">৳ 20</button>
+              <button class="chip" data-a="50">৳ 50</button>
+              <button class="chip" data-a="100">৳ 100</button>
+              <button class="chip" data-a="500">৳ 500</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footerbar">
+          <a class="btn next-disabled" id="next" href="recharge-overview.html" id="nextLink">Next</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  // amount quick chips
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>{ document.getElementById('amount').value = c.dataset.a; validate(); });
+  });
+  // tabs
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+  // open contacts
+  document.getElementById('openContacts').addEventListener('click', ()=>{
+    location.href = 'recharge-contacts.html';
+  });
+
+  function hydrate(){
+    const msisdn = localStorage.getItem('re_msisdn');
+    if(msisdn){
+      document.getElementById('msisdnHint').textContent = msisdn;
+      document.getElementById('msisdnHint').style.color = '';
+    }
+  }
+  function validate(){
+    const ok = document.getElementById('payFrom').value && (document.getElementById('amount').value>0) && localStorage.getItem('re_msisdn');
+    document.getElementById('next').classList.toggle('next-disabled', !ok);
+  }
+  hydrate(); validate();
+  document.getElementById('payFrom').addEventListener('change', validate);
+  document.getElementById('amount').addEventListener('input', validate);
+  // persist selections for overview
+  document.getElementById('nextLink').addEventListener('click', ()=>{
+    localStorage.setItem('re_from', document.getElementById('payFrom').value || '');
+    localStorage.setItem('re_amt', document.getElementById('amount').value || '0');
+  });
+</script>
+</body>
+</html>

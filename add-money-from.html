@@ -1,0 +1,102 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Add From — Card</title>
+  <link rel="stylesheet" href="transfer.css">
+  <style>
+    .tabs{display:flex; gap:14px; margin:0 0 8px 0}
+    .tab{padding:10px 14px; border:1px solid var(--border); border-radius:999px; cursor:pointer; font-weight:700}
+    .tab[aria-selected="true"]{background:var(--primary); color:#fff; border-color:var(--primary)}
+    .empty{padding:16px; color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="add-money.html">← Back</a>
+      <span class="step">1 / 4</span>
+    </div>
+    <div class="h1">Add From</div>
+
+    <div class="card">
+      <div class="section">
+        <div class="tabs" role="tablist">
+          <button id="t1" class="tab" role="tab" aria-selected="false">Saved Card</button>
+          <button id="t2" class="tab" role="tab" aria-selected="true">New Card</button>
+        </div>
+
+        <div id="panel-saved" role="tabpanel" hidden>
+          <div class="empty">You have no saved cards yet.</div>
+          <div class="footerbar"><a class="btn" href="#" id="goNew">Add New Card</a></div>
+        </div>
+
+        <form id="cardForm" role="tabpanel">
+          <div class="row">
+            <div class="label">Cardholder Name</div>
+            <input class="input" id="card_name" required placeholder="Enter cardholder name">
+          </div>
+
+          <div class="row">
+            <div class="label">Card Number</div>
+            <input class="input" id="card_no" required inputmode="numeric" minlength="13" maxlength="19" placeholder="Enter card number">
+          </div>
+
+          <div class="row">
+            <div class="label">Expiry Date</div>
+            <input class="input" id="card_exp" required placeholder="MM/YY">
+          </div>
+
+          <div class="row">
+            <div class="label">CVV</div>
+            <input class="input" id="card_cvv" required inputmode="numeric" minlength="3" maxlength="4" placeholder="CVV">
+          </div>
+
+          <div class="row">
+            <div class="label"></div>
+            <label class="kv"><input type="checkbox" id="saveCard" checked> Save this card information</label>
+          </div>
+
+          <div class="footerbar">
+            <button class="btn" id="next">Next</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // tabs
+  const t1 = document.getElementById('t1');
+  const t2 = document.getElementById('t2');
+  const saved = document.getElementById('panel-saved');
+  const form = document.getElementById('cardForm');
+  const goNew = document.getElementById('goNew');
+  function showSaved(){
+    t1.setAttribute('aria-selected','true'); t2.setAttribute('aria-selected','false');
+    saved.hidden = false; form.hidden = true;
+  }
+  function showNew(){
+    t1.setAttribute('aria-selected','false'); t2.setAttribute('aria-selected','true');
+    saved.hidden = true; form.hidden = false;
+  }
+  t1.addEventListener('click', showSaved);
+  t2.addEventListener('click', showNew);
+  if(goNew) goNew.addEventListener('click', function(e){ e.preventDefault(); showNew(); });
+
+  // proceed
+  form.addEventListener('submit', function(e){
+    if(!form.checkValidity()) return;
+    e.preventDefault();
+    const name = document.getElementById('card_name').value.trim();
+    const no = document.getElementById('card_no').value.replace(/\s+/g,'');
+    const last4 = no.slice(-4);
+    localStorage.setItem('am_card_holder', name || 'NA');
+    localStorage.setItem('am_card_mask', '•••• •••• •••• ' + last4);
+    localStorage.setItem('am_from', 'VISA/Mastercard');
+    window.location.href = 'add-money-amount.html';
+  });
+</script>
+</body>
+</html>

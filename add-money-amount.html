@@ -1,0 +1,63 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Add From — Amount</title>
+  <link rel="stylesheet" href="transfer.css">
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="add-money-from.html">← Back</a>
+      <span class="step">2 / 4</span>
+    </div>
+    <div class="h1">Add From</div>
+
+    <div class="card">
+      <div class="section">
+
+        <div class="row">
+          <div class="label">From</div>
+          <div class="kv"><b id="fromSel">Select a card</b><br>Card Holder: <span id="ch">NA</span></div>
+        </div>
+
+        <div class="row">
+          <div class="label">Amount</div>
+          <div>
+            <input class="input" id="amount" type="number" inputmode="decimal" placeholder="৳ Enter amount here">
+            <div class="amounts" style="margin-top:10px">
+              <button class="chip" data-a="500">৳ 500</button>
+              <button class="chip" data-a="5000">৳ 5000</button>
+              <button class="chip" data-a="10000">৳ 10000</button>
+              <button class="chip" data-a="20000">৳ 20000</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footerbar">
+          <a class="btn" id="next" href="add-money-to.html">Next</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // hydrate
+  document.getElementById('fromSel').textContent = localStorage.getItem('am_card_mask') || 'Select a card';
+  document.getElementById('ch').textContent = localStorage.getItem('am_card_holder') || 'NA';
+
+  // chips
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>{ document.getElementById('amount').value = c.dataset.a; });
+  });
+
+  // persist amount
+  document.getElementById('next').addEventListener('click', function(e){
+    const amt = document.getElementById('amount').value;
+    if(!amt){ e.preventDefault(); alert('Please enter an amount.'); return; }
+    localStorage.setItem('am_amount', amt);
+  });
+</script>
+</body>
+</html>

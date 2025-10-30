@@ -1,0 +1,87 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Add Money — Overview</title>
+  <link rel="stylesheet" href="transfer.css">
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="add-money-to.html">← Back</a>
+      <span class="step">4 / 4</span>
+    </div>
+    <div class="h1">Overview</div>
+
+    <div class="card">
+      <div class="section">
+
+        <div class="row">
+          <div class="label">Add From</div>
+          <div class="kv"><b id="from"></b><br><span id="holder"></span></div>
+        </div>
+
+        <div class="row">
+          <div class="label">Total Amount</div>
+          <div class="total">
+            <div>
+              <div class="kv">BDT</div>
+              <div id="amt" style="font-size:24px; font-weight:900; color:var(--primary)">0.00</div>
+              <div class="note" id="feeNote">BDT 0.00 + BDT 0.00</div>
+            </div>
+            <div class="kv">View Breakdown ⌄</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="label">Add To</div>
+          <div class="kv"><b id="toName"></b><br>Acc ** <span class="mask" id="toAcc"></span></div>
+        </div>
+
+        <div class="row">
+          <div class="label">Verification</div>
+          <div class="veri-grid" id="veri">
+            <label class="vcard"><input type="radio" name="veri"> Email</label>
+            <label class="vcard"><input type="radio" name="veri"> SMS</label>
+          </div>
+        </div>
+
+        <div class="footerbar">
+          <a class="btn" id="confirm" href="add-money-otp.html">Confirm & Add</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // hydrate data
+  const mask = localStorage.getItem('am_card_mask') || 'Card';
+  const holder = localStorage.getItem('am_card_holder') || 'NA';
+  const amount = localStorage.getItem('am_amount') || '0.00';
+  const toAcc = localStorage.getItem('am_to_acc') || '';
+  const toName = localStorage.getItem('am_to_name') || '';
+  document.getElementById('from').textContent = mask;
+  document.getElementById('holder').textContent = 'Card Holder: ' + holder;
+  document.getElementById('amt').textContent = parseFloat(amount).toFixed(2);
+  document.getElementById('feeNote').textContent = 'BDT ' + parseFloat(amount||0).toFixed(2) + ' + BDT 0.00';
+  document.getElementById('toName').textContent = toName;
+  document.getElementById('toAcc').textContent = (toAcc+'').slice(-4);
+
+  // verification card active state
+  const cards = document.querySelectorAll('.vcard');
+  cards.forEach(c=>{
+    c.addEventListener('click', ()=>{
+      cards.forEach(x=>x.classList.remove('active'));
+      c.classList.add('active');
+      c.querySelector('input').checked = true;
+    });
+  });
+
+  document.getElementById('confirm').addEventListener('click', function(){
+    // stash for receipt
+    localStorage.setItem('am_when', new Date().toLocaleString());
+  });
+</script>
+</body>
+</html>

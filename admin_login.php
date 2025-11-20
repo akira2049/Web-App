@@ -1,35 +1,32 @@
 <?php
 session_start();
+require_once 'infobip_sms.php';
 
 // --- DATABASE CONFIG ---
 $host     = "localhost";
 $dbname   = "my_bank";
 $db_user  = "root";
 $db_pass  = "";
-$table    = "user"; 
-// -----------------------
+$table    = "user";
 
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    // Form values
     $customerID = trim($_POST['customer_id'] ?? '');
     $password   = trim($_POST['password'] ?? '');
 
     if ($customerID === "" || $password === "") {
-        $error = "Please enter both Customer ID and Password.";
+        $error = "Please enter both User ID and Password.";
     } else {
 
-        // Connect to DB
         $conn = new mysqli($host, $db_user, $db_pass, $dbname);
 
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         }
 
-        // Get cid + password + user_type from DB
-        $sql = "SELECT cid, user_password, user_type FROM $table WHERE cid = ?";
+        $sql = "SELECT cid, phone, user_password, user_type FROM $table WHERE cid = ?";
         $stmt = $conn->prepare($sql);
 
         if (!$stmt) {
@@ -40,30 +37,43 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->execute();
         $result = $stmt->get_result();
 
-        // Check if CID exists
         if ($result && $result->num_rows === 1) {
             $user = $result->fetch_assoc();
 
-            // Compare plain text passwords
             if ($password === $user['user_password']) {
 
-                // Save cid + type in session
-                $_SESSION['cid'] = $user['cid'];
-                $_SESSION['type'] = $user['user_type'];
-
-                // --- REDIRECT BASED ON USER TYPE ---
-                if ($user['user_type'] === "admin") {
-                    header("Location: admin.php");
-                    exit;
+                if ($user['user_type'] !== "admin") {
+                    $error = "This login page is only for admin.";
                 } else {
-                    header("Location: dashboard.php");
-                    exit;
-                }
-            }
 
-            $error = "Invalid Customer ID or Password.";
+                    if (empty($user['phone'])) {
+                        $error = "Admin phone number is missing in database.";
+                    } else {
+
+                        $otp = random_int(100000, 999999);
+
+                        $_SESSION['pending_admin_id'] = $user['cid'];
+                        $_SESSION['admin_phone'] = $user['phone'];
+                        $_SESSION['login_otp'] = $otp;
+                        $_SESSION['otp_expires'] = time() + 300;
+
+                        try {
+                            $msg = "Your admin login OTP is: $otp (valid 5 minutes)";
+                            infobip_send_sms($user['phone'], $msg);
+
+                            header("Location: admin_otp.php");
+                            exit;
+                        } 
+                        catch (Exception $e) {
+                            $error = "OTP sending failed: " . $e->getMessage();
+                        }
+                    }
+                }
+            } else {
+                $error = "Invalid ID or password.";
+            }
         } else {
-            $error = "Invalid Customer ID or Password.";
+            $error = "Invalid ID or password.";
         }
 
         $stmt->close();
@@ -77,12 +87,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Banking Customer Portal - Login</title>
+  <title>Banking Customer Portal - Admin Login</title>
   <link rel="stylesheet" href="login.css">
 </head>
 <body>
   <div class="login-container">
-    <h2>Login</h2>
+    <h2>Admin Login</h2>
 
     <?php if (!empty($error)): ?>
       <p style="color:red; margin-bottom:10px;"><?php echo htmlspecialchars($error); ?></p>
@@ -90,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <form id="loginForm" method="post" action="admin_login.php">
       <div class="input-group">
-        <label for="customer_id">User ID</label>
+        <label for="customer_id">Admin User ID</label>
         <input type="text" id="customer_id" name="customer_id" placeholder="Enter your user ID" required>
       </div>
       <div class="input-group">

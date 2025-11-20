@@ -1,7 +1,12 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['cid'], $_SESSION['type'], $_SESSION['admin_verified'])) {
+    header("Location: admin_login.php");
+    exit;
+}
 // admin_dashboard.php
 
-session_start();
 
 // ---------- DATABASE CONNECTION ----------
 $host     = "localhost";   // change if needed
@@ -86,9 +91,9 @@ $billersList  = [];
 // Accounts: alias to match PHP keys used later
 $accSql = "SELECT 
              AccountNo, 
-             cid, 
+             CustomerID, 
              account_type   AS AccountType, 
-             account_status AS Status, 
+             account_status AS AccountStatus, 
              Balance 
            FROM accounts
            ORDER BY AccountNo ASC";
@@ -635,11 +640,11 @@ if ($res = $conn->query($billerSql)) {
                 <?php foreach ($accountsList as $a): ?>
                   <tr>
                     <td><?php echo htmlspecialchars($a['AccountNo']); ?></td>
-                    <td><?php echo htmlspecialchars($a['cid']); ?></td>
+                    <td><?php echo htmlspecialchars($a['CustomerID']); ?></td>
                     <td><?php echo htmlspecialchars($a['AccountType']); ?></td>
                     <td>
                       <?php
-                        $status = strtoupper($a['Status']);
+                        $status = strtoupper($a['AccountStatus']);
                         $badgeClass = 'badge';
                         if ($status === 'ACTIVE')        $badgeClass .= ' badge-green';
                         elseif ($status === 'CLOSED')    $badgeClass .= ' badge-red';

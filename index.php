@@ -1,9 +1,12 @@
+<?php
+// You can put any PHP setup logic here if needed later (sessions, includes, etc.)
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shanto Bank — Customer Portal</title>
+  <title>Bank — Customer Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,13 +21,13 @@
       </div>
       <nav class="nav">
         <a href="#" aria-current="page">Home</a>
-        <a href="products.html">Products</a>
+        <a href="products.php">Products</a>
         <a href="#">Support</a>
         <a href="#">About</a>
       </nav>
       <div class="nav-cta">
-        <a class="btn btn-outline" href="login.html">Log In</a>
-        <a class="btn" href="signup.html">Sign Up</a>
+        <a class="btn btn-outline" href="login.php">Log In</a>
+        <a class="btn" href="signup.php">Sign Up</a>
       </div>
     </div>
   </header>
@@ -34,12 +37,12 @@
     <section class="hero">
       <div class="container hero-inner">
         <div class="hero-copy">
-          <h1>All‑in‑one Customer Portal</h1>
+          <h1>All-in-one Customer Portal</h1>
           <p>Manage accounts, pay bills, and apply for loans in seconds with secure 24/7 access.</p>
 
           <div class="cta-row">
-            <a class="btn btn-light" href="signup.html">Sign Up</a>
-            <a class="btn btn-accent" href="login.html">Login</a>
+            <a class="btn btn-light" href="signup.php">Sign Up</a>
+            <a class="btn btn-accent" href="login.php">Login</a>
           </div>
         </div>
 
@@ -58,7 +61,7 @@
               </span>
               <div>
                 <h3>Competitive Interest Rate</h3>
-                <p>Earn more and pay less with market‑leading rates.</p>
+                <p>Earn more and pay less with market-leading rates.</p>
               </div>
             </li>
 
@@ -126,7 +129,7 @@
     <!-- Secondary cards -->
     <section class="quick-actions">
       <div class="container grid">
-        <a class="qa-card" href="open-account.html">
+        <a class="qa-card" href="open-account.php">
           <h3>Open an Account</h3>
           <p>Start banking with iCloud Bank in minutes.</p>
         </a>
@@ -136,7 +139,7 @@
 
   <footer class="footer">
     <div class="container footer-inner">
-      <p>© <span id="year"></span> iCloud Bank. All rights reserved.</p>
+      <p>© <?php echo date('Y'); ?> iCloud Bank. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Privacy</a>
         <a href="#">Terms</a>
@@ -144,9 +147,5 @@
       </div>
     </div>
   </footer>
-
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
 </body>
 </html>

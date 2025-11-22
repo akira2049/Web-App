@@ -76,3 +76,29 @@ body{
       background: #006699;
     }
  
+    .account-card {
+    max-width: 420px;
+    background: #fff;
+    margin: 20px auto;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
+}
+
+.acc-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.acc-row .label {
+    font-weight: 600;
+    color: #555;
+}
+
+.acc-row .value {
+    font-weight: 700;
+    color: #333;
+    font-size: 1.1rem;
+}

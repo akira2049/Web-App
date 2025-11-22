@@ -29,14 +29,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         // Get only cid + password from DB
-        $sql = "SELECT cid, password FROM $table WHERE cid = ?";
+        $sql = "SELECT cid, user_password FROM $table WHERE cid = ?";
         $stmt = $conn->prepare($sql);
 
         if (!$stmt) {
             die("SQL Error: " . $conn->error);
         }
 
-        $stmt->bind_param("s", $customerID);
+        $stmt->bind_param("i", $customerID);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $user = $result->fetch_assoc();
 
             // Compare plain text passwords
-            if ($password === $user['password']) {
+            if ($password === $user['user_password']) {
 
                 // Save only cid in session
                 $_SESSION['cid'] = $user['cid'];

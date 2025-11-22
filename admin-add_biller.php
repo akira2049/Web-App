@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo "<h2>Error adding biller: " . htmlspecialchars($stmt->error) . "</h2>";
     }
 
-    echo '<p><a href="admin_dashboard.php">Back to Dashboard</a></p>';
+    echo '<p><a href="admin.php">Back to Dashboard</a></p>';
 
     $stmt->close();
 }

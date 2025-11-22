@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MFS Transfer — Step 1</title>
+  <link rel="stylesheet" href="transfer.css"> <!-- reuse transfer UI -->
+  <style>
+    /* Admin-style accent (matches dashboard admin blue vibe) */
+    :root{
+      --primary:#00416A;
+      --primary-600:#005a91;
+    }
+    .wallet-grid{
+      display:grid; gap:12px;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+    @media (max-width:720px){ .wallet-grid{grid-template-columns:1fr;} }
+
+    .wallet-card{
+      padding:16px; border:1.5px solid var(--border); border-radius:14px;
+      cursor:pointer; background:#fff; display:flex; align-items:center; gap:10px;
+      font-weight:800;
+    }
+    .wallet-card.active{border-color:var(--primary); outline:2px solid #00416a22;}
+    .wallet-ico{
+      width:40px; height:40px; border-radius:10px; display:grid; place-items:center;
+      background:#f3f6f8; font-size:20px;
+    }
+    .help{color:var(--muted); font-size:13px; margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a class="linkish" href="fund-transfer_ui.html">← Back</a>
+      <span class="step">1 / 2</span>
+    </div>
+
+    <div class="h1">MFS Transfer</div>
+
+    <div class="card">
+      <div class="section">
+        <!-- Transfer From -->
+        <div class="row">
+          <div class="label">Transfer From</div>
+          <select id="fromAcc" required>
+            <option value="14512400000072">Acc. 14512400000072</option>
+            <option value="14512400000073">Acc. 14512400000073</option>
+          </select>
+        </div>
+
+        <!-- Wallet Type -->
+        <div class="row">
+          <div class="label">Select Wallet</div>
+          <div class="wallet-grid" id="walletGrid">
+            <div class="wallet-card active" data-wallet="bKash">
+              <div class="wallet-ico">📱</div>
+              <div>
+                bKash
+                <div class="help">Transfer to bKash wallet</div>
+              </div>
+            </div>
+
+            <div class="wallet-card" data-wallet="Nagad">
+              <div class="wallet-ico">💳</div>
+              <div>
+                Nagad
+                <div class="help">Transfer to Nagad wallet</div>
+              </div>
+            </div>
+
+            <div class="wallet-card" data-wallet="Rocket">
+              <div class="wallet-ico">🚀</div>
+              <div>
+                Rocket
+                <div class="help">Transfer to Rocket wallet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wallet Number -->
+        <div class="row">
+          <div class="label">Wallet Number</div>
+          <div>
+            <input class="input" id="walletNo" type="tel" placeholder="01XXXXXXXXX" required>
+            <div class="help">Enter receiver mobile wallet number</div>
+          </div>
+        </div>
+
+        <!-- Receiver name (demo auto-fill) -->
+        <div class="row">
+          <div class="label">Receiver Name</div>
+          <div class="ahd">
+            <div style="font-size:28px">👤</div>
+            <div>
+              <div class="name" id="rxName">Receiver</div>
+              <div class="kv">Wallet: <b id="rxWallet">bKash</b> • <span class="mask" id="rxNo">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amount -->
+        <div class="row">
+          <div class="label">Transfer Amount</div>
+          <div>
+            <input class="input" id="amount" type="number" inputmode="decimal" placeholder="৳ 0.00" required>
+            <div class="amounts" style="margin-top:10px">
+              <button type="button" class="chip" data-a="500">৳ 500</button>
+              <button type="button" class="chip" data-a="1000">৳ 1000</button>
+              <button type="button" class="chip" data-a="2000">৳ 2000</button>
+              <button type="button" class="chip" data-a="5000">৳ 5000</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="row">
+          <div class="label">Notes</div>
+          <input class="input" id="note" placeholder="MFS Transfer">
+        </div>
+
+        <!-- Next -->
+        <div class="footerbar">
+          <button class="btn" id="nextBtn">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // amount chips
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=> document.getElementById('amount').value = c.dataset.a);
+  });
+
+  // wallet selection
+  let selectedWallet = "bKash";
+  const walletCards = document.querySelectorAll('.wallet-card');
+  walletCards.forEach(card=>{
+    card.addEventListener('click', ()=>{
+      walletCards.forEach(x=>x.classList.remove('active'));
+      card.classList.add('active');
+      selectedWallet = card.dataset.wallet;
+      document.getElementById('rxWallet').textContent = selectedWallet;
+    });
+  });
+
+  // demo receiver name map by number (optional)
+  const demoNames = {
+    "01700000000":"MD RAHAT H.",
+    "01800000000":"SHAMIMA AKTER"
+  };
+
+  const walletNo = document.getElementById('walletNo');
+  walletNo.addEventListener('input', ()=>{
+    const num = walletNo.value.trim();
+    document.getElementById('rxNo').textContent = num || "—";
+    document.getElementById('rxName').textContent = demoNames[num] || "Receiver";
+  });
+
+  // Next -> overview with query params
+  document.getElementById('nextBtn').addEventListener('click', ()=>{
+    const fromAcc = document.getElementById('fromAcc').value;
+    const num = walletNo.value.trim();
+    const amt = document.getElementById('amount').value.trim();
+    const note = document.getElementById('note').value.trim();
+
+    if(!fromAcc || !num || !amt){
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const url = new URL("mfs-transfer-overview.html", window.location.href);
+    url.searchParams.set("from", fromAcc);
+    url.searchParams.set("wallet", selectedWallet);
+    url.searchParams.set("num", num);
+    url.searchParams.set("amt", amt);
+    url.searchParams.set("note", note);
+    url.searchParams.set("name", document.getElementById('rxName').textContent);
+
+    window.location.href = url.toString();
+  });
+</script>
+</body>
+</html>

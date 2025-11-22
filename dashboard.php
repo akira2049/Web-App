@@ -78,17 +78,16 @@ $conn->close();
   <header>
     <h1>Welcome to Your Banking Dashboard</h1>
 
-    <p style="text-align:center; color:#555;">
-        Account: <strong><?php echo htmlspecialchars($cid); ?></strong>
+    <p style="text-align:center; color:#FFFFFF;">
+        CID: <strong><?php echo htmlspecialchars($cid); ?></strong>
         <br>
-        Balance: <strong style="color:green;">৳ <?php echo number_format($balance, 2); ?></strong>
+        Balance: <strong style="color:#FFFFFF;">৳ <?php echo number_format($balance, 2); ?></strong>
     </p>
   </header>
 
-
   <!-- Dashboard Features -->
   <section class="dashboard">
-    <a href="fund-transfer_ui.php" class="card">
+    <a href="fund-transfer.php" class="card">
       <i class="fa-solid fa-money-bill-transfer fa-3x"></i>
       <h3>Fund Transfer</h3>
       <p>Send money securely to any bank account.</p>

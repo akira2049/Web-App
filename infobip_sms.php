@@ -3,8 +3,8 @@
 
 function infobip_send_sms($to, $text) {
     // ==== REPLACE WITH YOUR INFOBIP CREDENTIALS ====
-    $baseUrl = "https://69qpv8.api.infobip.com";   // e.g. https://abcd12.api.infobip.com
-    $apiKey  = "84edfec2442bb4c998788856ec770467-9e57587c-493e-4e3b-8e19-8d82e48ec74a";           // e.g. abcdef123456...
+    $baseUrl = "4ed4v6.api.infobip.com";   // e.g. https://abcd12.api.infobip.com
+    $apiKey  = "24817f74a2afaa722d8748347118e2a1-87b1545b-3fb1-4a53-aa43-37152f9f40ac";           // e.g. abcdef123456...
     // ===============================================
 
     $endpoint = $baseUrl . "/sms/2/text/advanced";

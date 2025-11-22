@@ -3,7 +3,7 @@
 require 'connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $biller_name  = $_POST['biller_name']  ?? '';
+    $biller_name  = $_POST['new_name']  ?? '';
     $biller_code  = $_POST['biller_code']  ?? '';
     $category     = $_POST['category']     ?? '';
     $status       = $_POST['status']       ?? 'ACTIVE';

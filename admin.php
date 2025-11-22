@@ -5,14 +5,12 @@ if (!isset($_SESSION['cid'], $_SESSION['type'], $_SESSION['admin_verified'])) {
     header("Location: admin_login.php");
     exit;
 }
-// admin_dashboard.php
-
 
 // ---------- DATABASE CONNECTION ----------
-$host     = "localhost";   // change if needed
-$user     = "root";        // your MySQL username
-$password = "";            // your MySQL password
-$database = "my_bank";     // your database name
+$host     = "localhost";
+$user     = "root";
+$password = "";
+$database = "my_bank";
 
 $conn = new mysqli($host, $user, $password, $database);
 
@@ -20,7 +18,7 @@ if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
 }
 
-// ---------- HANDLE DELETE ACTIONS (ACCOUNTS / CARDS / BILLERS) ----------
+// ---------- HANDLE DELETE ACTIONS ----------
 if (isset($_GET['del_acc'])) {
     $accNo = $_GET['del_acc'];
 
@@ -60,35 +58,32 @@ if (isset($_GET['del_biller'])) {
     exit;
 }
 
-// ---------- FETCH STATISTICS FOR OVERVIEW ----------
+// ---------- FETCH STATISTICS ----------
 $totalAccounts     = 0;
 $totalActiveCards  = 0;
 $totalBillers      = 0;
 
-// total accounts
 $result = $conn->query("SELECT COUNT(*) AS cnt FROM accounts");
 if ($result && $row = $result->fetch_assoc()) {
     $totalAccounts = (int)$row['cnt'];
 }
 
-// active cards
 $result = $conn->query("SELECT COUNT(*) AS cnt FROM cards WHERE cardStatus = 'ACTIVE'");
 if ($result && $row = $result->fetch_assoc()) {
     $totalActiveCards = (int)$row['cnt'];
 }
 
-// registered billers
 $result = $conn->query("SELECT COUNT(*) AS cnt FROM billers");
 if ($result && $row = $result->fetch_assoc()) {
     $totalBillers = (int)$row['cnt'];
 }
 
-// ---------- FETCH LISTS FOR OVERVIEW TABLES ----------
+// ---------- FETCH LISTS ----------
 $accountsList = [];
 $cardsList    = [];
 $billersList  = [];
 
-// Accounts: alias to match PHP keys used later
+// Accounts
 $accSql = "SELECT 
              AccountNo, 
              CustomerID, 
@@ -125,7 +120,6 @@ if ($res = $conn->query($billerSql)) {
     }
     $res->free();
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -134,11 +128,9 @@ if ($res = $conn->query($billerSql)) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
 
-  <!-- Existing styles -->
   <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-  <!-- Extra styles only for admin layout -->
   <style>
     :root {
       --admin-bg-dark: #002b45;
@@ -157,7 +149,6 @@ if ($res = $conn->query($billerSql)) {
       min-height: 100vh;
     }
 
-    /* Sidebar */
     .sidebar {
       width: 260px;
       background: var(--admin-bg-dark);
@@ -243,7 +234,6 @@ if ($res = $conn->query($billerSql)) {
       opacity: 0.7;
     }
 
-    /* Main admin area */
     .admin-main {
       flex: 1;
       display: flex;
@@ -281,7 +271,6 @@ if ($res = $conn->query($billerSql)) {
       padding: 16px 24px 30px;
     }
 
-    /* Each section behaves like its own grid */
     .admin-section {
       display: none;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -293,7 +282,6 @@ if ($res = $conn->query($billerSql)) {
       display: grid;
     }
 
-    /* Cards / container look */
     .admin-card {
       background: #ffffff;
       border-radius: 12px;
@@ -301,7 +289,6 @@ if ($res = $conn->query($billerSql)) {
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
-    /* Make big cards (tables) span full width of the admin-content grid */
     .admin-card.full-width {
       grid-column: 1 / -1;
     }
@@ -321,7 +308,6 @@ if ($res = $conn->query($billerSql)) {
       margin-bottom: 14px;
     }
 
-    /* Scroll wrapper so tables always stay inside admin-content */
     .table-scroll {
       width: 100%;
       overflow-x: auto;
@@ -329,10 +315,9 @@ if ($res = $conn->query($billerSql)) {
 
     .table-scroll .admin-table {
       width: 100%;
-      min-width: 700px; /* give some breathing room for multiple columns */
+      min-width: 700px;
     }
 
-    /* Tables in overview */
     .admin-table {
       border-collapse: collapse;
       font-size: 13px;
@@ -394,7 +379,6 @@ if ($res = $conn->query($billerSql)) {
       text-decoration: underline;
     }
 
-    /* Simple form styling */
     .admin-form {
       display: grid;
       gap: 10px 14px;
@@ -498,9 +482,7 @@ if ($res = $conn->query($billerSql)) {
     }
 
     @media (max-width: 900px) {
-      .admin-layout {
-        flex-direction: column;
-      }
+      .admin-layout { flex-direction: column; }
       .sidebar {
         width: 100%;
         flex-direction: row;
@@ -509,36 +491,21 @@ if ($res = $conn->query($billerSql)) {
         padding: 12px 16px;
         overflow-x: auto;
       }
-      .sidebar-nav {
-        flex-direction: row;
-        gap: 6px;
-        flex: 1;
-      }
-      .sidebar-footer {
-        display: none;
-      }
-      .stats-row {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
+      .sidebar-nav { flex-direction: row; gap: 6px; flex: 1; }
+      .sidebar-footer { display: none; }
+      .stats-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
     @media (max-width: 640px) {
-      .admin-form {
-        grid-template-columns: 1fr;
-      }
-      .stats-row {
-        grid-template-columns: 1fr;
-      }
-      .table-scroll .admin-table {
-        min-width: 600px;
-      }
+      .admin-form { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+      .table-scroll .admin-table { min-width: 600px; }
     }
   </style>
 </head>
 <body>
 
 <div class="admin-layout">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">AD</div>
@@ -576,9 +543,7 @@ if ($res = $conn->query($billerSql)) {
     </div>
   </aside>
 
-  <!-- Main Area -->
   <div class="admin-main">
-    <!-- Header -->
     <header>
       <h1>Admin Dashboard</h1>
       <div class="admin-meta">
@@ -587,9 +552,10 @@ if ($res = $conn->query($billerSql)) {
     </header>
 
     <main class="admin-content">
-      <!-- OVERVIEW: TOTALS + TABLES -->
+
+      <!-- OVERVIEW -->
       <section id="section-overview" class="admin-section active">
-        <!-- Summary card -->
+
         <div class="admin-card">
           <h2><i class="fa-solid fa-chart-line"></i> System Overview</h2>
           <p class="subtitle">Quick snapshot of your system. Use sidebar to manage accounts, cards and billers.</p>
@@ -597,26 +563,20 @@ if ($res = $conn->query($billerSql)) {
           <div class="stats-row">
             <div class="stat-card">
               <div class="stat-label">Total Accounts</div>
-              <div class="stat-value">
-                <?php echo $totalAccounts; ?>
-              </div>
+              <div class="stat-value"><?php echo $totalAccounts; ?></div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Active Cards</div>
-              <div class="stat-value">
-                <?php echo $totalActiveCards; ?>
-              </div>
+              <div class="stat-value"><?php echo $totalActiveCards; ?></div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Registered Billers</div>
-              <div class="stat-value">
-                <?php echo $totalBillers; ?>
-              </div>
+              <div class="stat-value"><?php echo $totalBillers; ?></div>
             </div>
           </div>
         </div>
 
-        <!-- Accounts table -->
+        <!-- Accounts Table -->
         <div class="admin-card full-width">
           <h2><i class="fa-solid fa-landmark"></i> Accounts</h2>
           <p class="subtitle">All customer accounts currently available in the system.</p>
@@ -670,7 +630,7 @@ if ($res = $conn->query($billerSql)) {
           <?php endif; ?>
         </div>
 
-        <!-- Cards table -->
+        <!-- Cards Table -->
         <div class="admin-card full-width">
           <h2><i class="fa-regular fa-credit-card"></i> Cards</h2>
           <p class="subtitle">All cards linked to customer accounts.</p>
@@ -724,7 +684,7 @@ if ($res = $conn->query($billerSql)) {
           <?php endif; ?>
         </div>
 
-        <!-- Billers table -->
+        <!-- Billers Table -->
         <div class="admin-card full-width">
           <h2><i class="fa-solid fa-file-invoice-dollar"></i> Billers</h2>
           <p class="subtitle">All registered utility and merchant billers.</p>
@@ -776,9 +736,8 @@ if ($res = $conn->query($billerSql)) {
         </div>
       </section>
 
-      <!-- MANAGE ACCOUNTS: ADD + UPDATE -->
+      <!-- MANAGE ACCOUNTS -->
       <section id="section-accounts" class="admin-section">
-        <!-- Add Account -->
         <div class="admin-card">
           <h2><i class="fa-solid fa-landmark"></i> Add New Account</h2>
           <p class="subtitle">Open a new bank account for a customer.</p>
@@ -786,13 +745,52 @@ if ($res = $conn->query($billerSql)) {
           <form class="admin-form" method="post" action="admin-add_account.php">
             <div class="form-group">
               <label for="acc_cid">Customer ID</label>
-              <input type="text" id="acc_cid" name="customer_id" placeholder="e.g. C1023" required>
+
+              <div style="display:flex; gap:6px;">
+                <input
+                  type="text"
+                  id="acc_cid"
+                  name="customer_id"
+                  placeholder="6 digit CID"
+                  required
+                  style="flex:1;"
+                  maxlength="6"
+                >
+                <button
+                  type="button"
+                  id="generate-cid-btn"
+                  class="admin-btn"
+                  style="padding-inline:10px;"
+                >
+                  Auto
+                </button>
+              </div>
             </div>
 
             <div class="form-group">
               <label for="acc_number">Account No</label>
-              <input type="text" id="acc_number" name="account_no" placeholder="14512400000085" required>
+
+              <div style="display:flex; gap:6px;">
+                <input 
+                  type="text" 
+                  id="acc_number" 
+                  name="account_no" 
+                  placeholder="14xxxxxxxxxxxx" 
+                  required
+                  style="flex:1;"
+                  maxlength="13"
+                >
+                <button 
+                  type="button" 
+                  id="generate-accno-btn" 
+                  class="admin-btn" 
+                  style="padding-inline:10px;"
+                >
+                  Auto
+                </button>
+              </div>
             </div>
+
 
             <div class="form-group">
               <label for="acc_type">Account Type</label>
@@ -829,13 +827,13 @@ if ($res = $conn->query($billerSql)) {
             </div>
 
             <div class="form-group">
-              <label for="acc_name">Account Name</label>
+              <label for="account_name">Account Name</label>
               <input type="text" id="account_name" name="account_name" placeholder="Account Name" required>
             </div>
 
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="text" id="email" name="email" placeholder="" required>
+              <input type="text" id="email" name="email" required>
             </div>
 
             <div class="form-group">
@@ -857,7 +855,6 @@ if ($res = $conn->query($billerSql)) {
           </form>
         </div>
 
-        <!-- Update Account Status -->
         <div class="admin-card">
           <h2><i class="fa-solid fa-arrow-rotate-right"></i> Update Account Status</h2>
           <p class="subtitle">Change the status of an existing account.</p>
@@ -884,7 +881,7 @@ if ($res = $conn->query($billerSql)) {
 
             <div class="form-group full">
               <label for="upd_acc_note">Remarks</label>
-              <textarea id="upd_acc_note" name="remarks" placeholder="Additional notes about this status change"></textarea>
+              <textarea id="upd_acc_note" name="remarks"></textarea>
             </div>
 
             <div class="admin-actions">
@@ -897,9 +894,9 @@ if ($res = $conn->query($billerSql)) {
         </div>
       </section>
 
-      <!-- MANAGE CARDS: ADD + UPDATE -->
+      <!-- MANAGE CARDS -->
       <section id="section-cards" class="admin-section">
-        <!-- Add Card -->
+
         <div class="admin-card">
           <h2><i class="fa-regular fa-credit-card"></i> Add New Card</h2>
           <p class="subtitle">Create a new card and link it to a customer account.</p>
@@ -908,14 +905,19 @@ if ($res = $conn->query($billerSql)) {
 
             <div class="form-group">
               <label for="card_cid">Customer ID</label>
-              <input type="text" id="card_cid" name="customer_id" placeholder="e.g. C1023" required>
+              <input type="text" id="card_cid" name="customer_id" placeholder="e.g. 1023" required>
             </div>
 
+            <!-- UPDATED: linked account auto-fill dropdown -->
             <div class="form-group">
               <label for="card_account">Linked Account No</label>
-              <input type="text" id="card_account" name="account_no" placeholder="14512400000072" required>
+              <select id="card_account" name="account_no" required>
+                <option value="">-- enter CID first --</option>
+              </select>
+              <small id="acc-help" style="font-size:12px; color:#6b7280;"></small>
             </div>
 
+            <!-- UPDATED: holder name auto-fill -->
             <div class="form-group">
               <label for="card_holder">Card Holder Name</label>
               <input type="text" id="card_holder" name="card_holder" placeholder="Name on Card" required>
@@ -999,7 +1001,6 @@ if ($res = $conn->query($billerSql)) {
           </form>
         </div>
 
-        <!-- Update Card Status -->
         <div class="admin-card">
           <h2><i class="fa-solid fa-shield-halved"></i> Update Card Status</h2>
           <p class="subtitle">Block, unblock or change the status of an existing card.</p>
@@ -1007,7 +1008,7 @@ if ($res = $conn->query($billerSql)) {
           <form class="admin-form" method="post" action="admin-update_card_status.php">
             <div class="form-group full">
               <label for="upd_card_number">Card Number</label>
-              <input type="text" id="upd_card_number" name="card_number" placeholder="Card number to update" required>
+              <input type="text" id="upd_card_number" name="card_number" required>
             </div>
 
             <div class="form-group">
@@ -1021,12 +1022,12 @@ if ($res = $conn->query($billerSql)) {
 
             <div class="form-group">
               <label for="upd_card_reason">Reason (optional)</label>
-              <input type="text" id="upd_card_reason" name="reason" placeholder="e.g. lost card, customer request">
+              <input type="text" id="upd_card_reason" name="reason">
             </div>
 
             <div class="form-group full">
               <label for="upd_card_note">Remarks</label>
-              <textarea id="upd_card_note" name="remarks" placeholder="Additional notes about this status change"></textarea>
+              <textarea id="upd_card_note" name="remarks"></textarea>
             </div>
 
             <div class="admin-actions">
@@ -1039,9 +1040,8 @@ if ($res = $conn->query($billerSql)) {
         </div>
       </section>
 
-      <!-- MANAGE BILLERS: ADD + UPDATE -->
+      <!-- MANAGE BILLERS -->
       <section id="section-billers" class="admin-section">
-        <!-- Add Biller -->
         <div class="admin-card">
           <h2><i class="fa-solid fa-file-invoice-dollar"></i> Add New Biller</h2>
           <p class="subtitle">Register a new utility or merchant so customers can pay bills online.</p>
@@ -1049,12 +1049,12 @@ if ($res = $conn->query($billerSql)) {
           <form class="admin-form" method="post" action="admin-add_biller.php">
             <div class="form-group">
               <label for="biller_name">Biller Name</label>
-              <input type="text" id="biller_name" name="biller_name" placeholder="Biller name" required>
+              <input type="text" id="biller_name" name="biller_name" required>
             </div>
 
             <div class="form-group">
               <label for="biller_code">Biller ID</label>
-              <input type="text" id="biller_code" name="biller_code" placeholder="Unique code" required>
+              <input type="text" id="biller_code" name="biller_code" required>
             </div>
 
             <div class="form-group">
@@ -1088,7 +1088,6 @@ if ($res = $conn->query($billerSql)) {
           </form>
         </div>
 
-        <!-- Update Biller Info / Status -->
         <div class="admin-card">
           <h2><i class="fa-solid fa-pen-to-square"></i> Update Biller</h2>
           <p class="subtitle">Change status or information of an existing biller.</p>
@@ -1096,7 +1095,7 @@ if ($res = $conn->query($billerSql)) {
           <form class="admin-form" method="post" action="admin-update_biller.php">
             <div class="form-group">
               <label for="upd_biller_code">Biller Code</label>
-              <input type="text" id="upd_biller_code" name="biller_code" placeholder="Existing biller code" required>
+              <input type="text" id="upd_biller_code" name="biller_code" required>
             </div>
 
             <div class="form-group">
@@ -1109,7 +1108,7 @@ if ($res = $conn->query($billerSql)) {
 
             <div class="form-group">
               <label for="upd_biller_name">New Name (optional)</label>
-              <input type="text" id="upd_biller_name" name="new_name" placeholder="Update biller name if needed">
+              <input type="text" id="upd_biller_name" name="new_name">
             </div>
 
             <div class="form-group">
@@ -1140,7 +1139,7 @@ if ($res = $conn->query($billerSql)) {
   </div>
 </div>
 
-<!-- Simple JS to switch sections on sidebar click -->
+<!-- Sidebar section switching -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const navLinks = document.querySelectorAll('.sidebar-nav a[data-section]');
@@ -1169,8 +1168,80 @@ if ($res = $conn->query($billerSql)) {
   });
 </script>
 
+<!-- AUTO-FILL ACCOUNT + HOLDER NAME BY CID -->
 <script>
-  // CARD FORM EXTRA LOGIC
+document.addEventListener('DOMContentLoaded', function () {
+  const cidInput    = document.getElementById('card_cid');
+  const accSelect   = document.getElementById('card_account');
+  const accHelp     = document.getElementById('acc-help');
+  const holderInput = document.getElementById('card_holder');
+
+  let debounceTimer = null;
+
+  function resetFields(msg = "") {
+    accSelect.innerHTML = `<option value="">-- enter CID first --</option>`;
+    accHelp.textContent = msg;
+    holderInput.value = "";
+  }
+
+  async function loadByCid(cid) {
+    resetFields("Searching accounts...");
+    try {
+      const res = await fetch(`admin-get_account_by_cid.php?cid=${encodeURIComponent(cid)}`);
+      const data = await res.json();
+
+      if (!data.ok) {
+        resetFields(data.message || "Failed to load data.");
+        return;
+      }
+
+      const accounts = data.accounts || [];
+      const holderName = data.holderName || "";
+
+      holderInput.value = holderName;
+
+      if (accounts.length === 0) {
+        accSelect.innerHTML = `<option value="">No account found</option>`;
+        accHelp.textContent = "No account found for this CID.";
+        return;
+      }
+
+      accSelect.innerHTML = `<option value="">Select account</option>`;
+      accounts.forEach(acc => {
+        const opt = document.createElement('option');
+        opt.value = acc;
+        opt.textContent = acc;
+        accSelect.appendChild(opt);
+      });
+
+      accSelect.value = accounts[0];
+
+      accHelp.textContent = accounts.length > 1
+        ? `Found ${accounts.length} accounts. Pick one if needed.`
+        : `Account auto-selected.`;
+
+    } catch (err) {
+      resetFields("Error fetching data.");
+      console.error(err);
+    }
+  }
+
+  cidInput.addEventListener('input', function () {
+    const cid = cidInput.value.trim();
+    clearTimeout(debounceTimer);
+
+    if (cid.length === 0) {
+      resetFields("");
+      return;
+    }
+
+    debounceTimer = setTimeout(() => loadByCid(cid), 400);
+  });
+});
+</script>
+
+<!-- Existing Card generation + validation -->
+<script>
   document.addEventListener('DOMContentLoaded', function () {
     const cardForm       = document.getElementById('card-form');
     const cardNumberInput= document.getElementById('card_number');
@@ -1220,16 +1291,14 @@ if ($res = $conn->query($billerSql)) {
     if (genCardBtn) {
       genCardBtn.addEventListener('click', function () {
         const type = cardTypeSelect.value || 'VISA';
-        const num  = generateDemoCardNumber(type);
-        cardNumberInput.value = num;
+        cardNumberInput.value = generateDemoCardNumber(type);
       });
     }
 
     if (genCvcBtn) {
       genCvcBtn.addEventListener('click', function () {
         const type = cardTypeSelect.value || 'VISA';
-        const cvc  = generateDemoCvc(type);
-        cvcInput.value = cvc;
+        cvcInput.value = generateDemoCvc(type);
       });
     }
 
@@ -1262,6 +1331,101 @@ if ($res = $conn->query($billerSql)) {
     }
   });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const cidInput = document.getElementById('acc_cid');
+  const genCidBtn = document.getElementById('generate-cid-btn');
+
+  function generateSixDigitCid() {
+    // random number from 100000 to 999999
+    return Math.floor(100000 + Math.random() * 900000);
+  }
+
+  if (genCidBtn && cidInput) {
+    genCidBtn.addEventListener('click', function () {
+      cidInput.value = generateSixDigitCid();
+      cidInput.focus();
+    });
+  }
+
+  // optional: prevent non-numbers typing
+  if (cidInput) {
+    cidInput.addEventListener('input', function () {
+      cidInput.value = cidInput.value.replace(/\D/g, '').slice(0, 6);
+    });
+  }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ---------------------------
+       AUTO GENERATE CID
+  ----------------------------*/
+  const cidInput = document.getElementById('acc_cid');
+  const genCidBtn = document.getElementById('generate-cid-btn');
+
+  function generateSixDigitCid() {
+    return Math.floor(100000 + Math.random() * 900000);
+  }
+
+  if (genCidBtn && cidInput) {
+    genCidBtn.addEventListener('click', function () {
+      cidInput.value = generateSixDigitCid();
+      cidInput.focus();
+    });
+  }
+
+  if (cidInput) {
+    cidInput.addEventListener('input', function () {
+      cidInput.value = cidInput.value.replace(/\D/g, '').slice(0, 6);
+    });
+  }
+
+
+  /* -----------------------------------------
+       AUTO GENERATE 13-DIGIT ACCOUNT NUMBER
+       Must start with 14
+     -----------------------------------------*/
+  const accNoInput = document.getElementById('acc_number');
+  const genAccNoBtn = document.getElementById('generate-accno-btn');
+
+  function generateAccountNumber() {
+    // Always start with 14
+    let number = "14";
+
+    // Generate the remaining 11 digits (to make total 13)
+    for (let i = 0; i < 11; i++) {
+      number += Math.floor(Math.random() * 10);
+    }
+
+    return number;
+  }
+
+  if (genAccNoBtn && accNoInput) {
+    genAccNoBtn.addEventListener('click', function () {
+      accNoInput.value = generateAccountNumber();
+      accNoInput.focus();
+    });
+  }
+
+  // Restrict manual input to numbers only, 13 digits max
+  if (accNoInput) {
+    accNoInput.addEventListener('input', function () {
+      accNoInput.value = accNoInput.value.replace(/\D/g, '').slice(0, 13);
+
+      // If admin types and forgets, auto-force start with 14
+      if (!accNoInput.value.startsWith("14")) {
+        accNoInput.value = "14" + accNoInput.value.replace(/^14/, "");
+      }
+    });
+  }
+
+});
+</script>
+
 </body>
 </html>
 <?php

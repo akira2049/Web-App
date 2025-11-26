@@ -2,10 +2,10 @@
 session_start();
 
 // Redirect if not logged in
-if (!isset($_SESSION['cid'])) {
+/*if (!isset($_SESSION['cid'])) {
     header("Location: login.php");
     exit;
-}
+}*/
 
 $cid = $_SESSION['cid'];  // logged-in customer ID
 
@@ -22,11 +22,11 @@ if ($conn->connect_error) {
 }
 
 /* -------------------------------------------------
-   STEP 1: Get phone number of the logged-in cid
+   STEP 1: Get user's phone number using cid
 --------------------------------------------------*/
 $sql = "SELECT phone FROM user WHERE cid = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $cid);
+$stmt->bind_param("i", $cid);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -40,13 +40,15 @@ if ($result && $result->num_rows === 1) {
 $stmt->close();
 
 /* -------------------------------------------------
-   STEP 2: Search ACCOUNT table using phone number
+   STEP 2: Get AccountNo + Balance using phone
 --------------------------------------------------*/
-
+$accountNo = "Not Found";
 $balance = 0;
 
 if ($phone !== null) {
-    $sql2 = "SELECT Balance FROM accounts WHERE phone = ?";
+
+    // Correct: 1 variable → bind_param("s", $phone)
+    $sql2 = "SELECT AccountNo, Balance FROM accounts WHERE phone = ?";
     $stmt2 = $conn->prepare($sql2);
     $stmt2->bind_param("s", $phone);
     $stmt2->execute();
@@ -54,7 +56,8 @@ if ($phone !== null) {
 
     if ($result2 && $result2->num_rows === 1) {
         $row2 = $result2->fetch_assoc();
-        $balance = $row2['Balance'];
+        $accountNo = $row2['AccountNo'];
+        $balance   = $row2['Balance'];
     }
 
     $stmt2->close();
@@ -79,7 +82,7 @@ $conn->close();
     <h1>Welcome to Your Banking Dashboard</h1>
 
     <p style="text-align:center; color:#FFFFFF;">
-        CID: <strong><?php echo htmlspecialchars($cid); ?></strong>
+        Account No: <strong><?php echo htmlspecialchars($accountNo); ?></strong>
         <br>
         Balance: <strong style="color:#FFFFFF;">৳ <?php echo number_format($balance, 2); ?></strong>
     </p>
@@ -129,7 +132,7 @@ $conn->close();
       <p>View and download your account certificates.</p>
     </a>
 
-    <a href="history.php" class="card">
+    <a href="transaction-history.php" class="card">
       <i class="fa-solid fa-clock-rotate-left fa-3x"></i>
       <h3>History</h3>
       <p>Check all your past transactions.</p>

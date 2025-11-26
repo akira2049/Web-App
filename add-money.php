@@ -1,4 +1,7 @@
-
+<?php
+session_start();
+if (!isset($_SESSION['cid'])) { header("Location: login.php"); exit; }
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -14,13 +17,13 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <a class="linkish" href="dashboard.html">← Back</a>
+      <a class="linkish" href="dashboard.php">← Back</a>
     </div>
     <div class="h1">Add Money</div>
 
     <div class="card">
       <div class="section list">
-        <a class="opt card" style="text-decoration:none" href="add-money-from.html">
+        <a class="opt card" style="text-decoration:none" href="add-money-from.php">
           <div>
             <div class="title">VISA/Mastercard</div>
             <small>From VISA/Mastercard credit & debit cards</small>
@@ -28,7 +31,7 @@
           <div>›</div>
         </a>
 
-        <a class="opt card" style="text-decoration:none" href="add-money-saved.html">
+        <a class="opt card" style="text-decoration:none" href="add-money-saved.php">
           <div>
             <div class="title">Saved Cards</div>
             <small>See your saved cards</small>
@@ -36,7 +39,7 @@
           <div>›</div>
         </a>
 
-        <a class="opt card" style="text-decoration:none" href="history.html">
+        <a class="opt card" style="text-decoration:none" href="history.php">
           <div>
             <div class="title">History</div>
             <small>View your recent add-money transactions</small>

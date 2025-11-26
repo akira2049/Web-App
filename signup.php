@@ -14,7 +14,7 @@
     <div class="container">
       <div class="brand">
         <span class="logo">SB</span>
-        <span class="brand-text">Shanto Bank</span>
+        <span class="brand-text">My Bank</span>
       </div>
       <nav class="nav">
         <a href="index.html">Home</a>
@@ -62,7 +62,7 @@
             <input type="tel" name="phone" pattern="[0-9+\-\s]{7,}" placeholder="+8801XXXXXXXXX" required />
           </label>
           <label class="field">
-            <span>Username</span>
+            <span>Customer ID</span>
             <input type="text" name="username" minlength="4" maxlength="20" required />
           </label>
         </div>

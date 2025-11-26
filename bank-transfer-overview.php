@@ -13,7 +13,7 @@ if ($from_acc=='' || $to_acc=='' || $amount=='') {
     header("Location: bank-transfer.php");
     exit;
 }
-// Save transfer info into session so OTP + process can use it
+// Save transfer info to session for OTP + processing
 $_SESSION['ebl_pending_transfer'] = [
     'from_acc' => $from_acc,
     'to_acc'   => $to_acc,
@@ -22,9 +22,8 @@ $_SESSION['ebl_pending_transfer'] = [
     'holder'   => $holder
 ];
 
-// clear old otp / verify flag
+// Clear any old OTP/verification flags if user comes again
 unset($_SESSION['otp_code'], $_SESSION['otp_exp'], $_SESSION['ebl_transfer_verified']);
-
 ?>
 <!doctype html>
 <html lang="en">

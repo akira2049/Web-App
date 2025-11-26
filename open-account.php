@@ -1,3 +1,39 @@
+<?php
+// open_account.php
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    // Collect form values
+    $account_type     = $_POST['account_type'] ?? '';
+    $currency         = $_POST['currency'] ?? '';
+    $initial_deposit  = $_POST['initial_deposit'] ?? '';
+    $first_name       = $_POST['first_name'] ?? '';
+    $last_name        = $_POST['last_name'] ?? '';
+    $dob              = $_POST['dob'] ?? '';
+    $nid              = $_POST['nid'] ?? '';
+    $occupation       = $_POST['occupation'] ?? '';
+    $source_of_funds  = $_POST['source_of_funds'] ?? '';
+    $email            = $_POST['email'] ?? '';
+    $phone            = $_POST['phone'] ?? '';
+    $alt_phone        = $_POST['alt_phone'] ?? '';
+    $addr1            = $_POST['addr1'] ?? '';
+    $addr2            = $_POST['addr2'] ?? '';
+    $city             = $_POST['city'] ?? '';
+    $postal           = $_POST['postal'] ?? '';
+    $country          = $_POST['country'] ?? '';
+    $kyc              = isset($_POST['kyc']) ? 1 : 0;
+    $terms            = isset($_POST['terms']) ? 1 : 0;
+
+    // You can now insert into DB here
+    // Example:
+    // include 'connect.php';
+    // $stmt = $conn->prepare("INSERT INTO account_applications (...) VALUES (...)");
+
+    // For now, just a temporary success message:
+    echo "<script>alert('Application submitted successfully!');</script>";
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,13 +49,13 @@
   <header class="topbar">
     <div class="container">
       <div class="brand">
-        <span class="logo">SB</span>
-        <span class="brand-text">Shanto Bank</span>
+        <span class="logo">MB</span>
+        <span class="brand-text">My Bank</span>
       </div>
       <nav class="nav">
-        <a href="index.html">Home</a>
+        <a href="index.php">Home</a>
         <a href="#" aria-current="page">Open an Account</a>
-        <a href="signup.html">Sign Up</a>
+        <a href="signup.php">Sign Up</a>
         <a href="#">Support</a>
       </nav>
     </div>
@@ -27,9 +63,10 @@
 
   <main class="container" style="padding:30px 0 60px;">
     <h1 style="color:#4b248c;margin:0 0 8px;">Open a New Bank Account</h1>
-    <p style="color:#5e5e6a;margin:0 0 20px;">No account yet? Complete the steps below to create a <strong>Savings</strong> or <strong>Current</strong> account. Already a customer? <a href="signup.html">Create your iCloud portal account</a>.</p>
+    <p style="color:#5e5e6a;margin:0 0 20px;">No account yet? Complete the steps below to create a <strong>Savings</strong> or <strong>Current</strong> account. Already a customer? <a href="signup.php">Create your iCloud portal account</a>.</p>
 
-    <form id="open-account-form" class="form-card" action="#" method="post" novalidate>
+    <form id="open-account-form" class="form-card" action="" method="post" novalidate>
+
       <!-- Account Preferences -->
       <fieldset class="fieldset">
         <legend>Account Preferences</legend>
@@ -75,15 +112,24 @@
             <input type="date" name="dob" required />
           </label>
         </div>
+
         <div class="row">
           <label class="field">
             <span>National ID / Passport No.</span>
             <input type="text" name="nid" minlength="6" maxlength="25" required />
           </label>
+
+          <!-- NEW UPLOAD FIELD -->
+          <label class="field">
+            <span>Upload NID / Passport Photo</span>
+            <input type="file" name="nid_file" accept="image/*,.pdf" required />
+          </label>
+
           <label class="field">
             <span>Occupation</span>
             <input type="text" name="occupation" placeholder="e.g., Student, Engineer" required />
           </label>
+
           <label class="field">
             <span>Source of Funds</span>
             <select name="source_of_funds" required>
@@ -96,6 +142,7 @@
           </label>
         </div>
       </fieldset>
+
 
       <!-- Contact & Address -->
       <fieldset class="fieldset">
@@ -154,7 +201,7 @@
       </fieldset>
 
       <div class="actions">
-        <a class="btn btn-outline" href="index.html">Back</a>
+        <a class="btn btn-outline" href="index.php">Back</a>
         <button class="btn" type="submit">Submit Application</button>
       </div>
 

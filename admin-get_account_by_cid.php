@@ -3,10 +3,11 @@
 header('Content-Type: application/json');
 session_start();
 
-if (!isset($_SESSION['cid'], $_SESSION['type'], $_SESSION['admin_verified'])) {
+/*if (!isset($_SESSION['cid'], $_SESSION['type'], $_SESSION['admin_verified'])) {
     echo json_encode(["ok" => false, "message" => "Unauthorized"]);
     exit;
-}
+}*/
+
 
 $host     = "localhost";
 $user     = "root";

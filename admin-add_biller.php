@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Adjust table/column names to match your `billers` table
     $sql = "INSERT INTO billers
-            (biller_name, biller_code, biller_category, biller_status)
+            (biller_name, id, biller_type, biller_status)
             VALUES (?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);

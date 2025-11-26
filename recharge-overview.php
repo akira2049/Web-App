@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['cid'])) {
+    header("Location: login.php");
+    exit;
+}
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -15,7 +22,8 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <a class="linkish" href="recharge.html">← Back</a>
+      <!-- back to PHP recharge step-1 page -->
+      <a class="linkish" href="mobile-recharge.php">← Back</a>
       <span class="step">2 / 2</span>
     </div>
     <div class="h1" id="title">Mobile Recharge</div>
@@ -50,15 +58,18 @@
 
         <div class="row">
           <div class="label">Notes</div>
-          <input class="input" value="Mobile Recharge">
+          <input class="input" id="note" value="Mobile Recharge">
         </div>
 
         <div class="row">
           <div class="label">Complete payment confirmation via</div>
           <div class="veri" id="veri">
-            <label class="vopt"><input type="radio" name="v"> Biometric</label>
-            <label class="vopt"><input type="radio" name="v"> Email</label>
-            <label class="vopt"><input type="radio" name="v"> SMS</label>
+            <label class="vopt">
+              <input type="radio" name="v" value="email"> Email
+            </label>
+            <label class="vopt">
+              <input type="radio" name="v" value="sms"> SMS
+            </label>
           </div>
         </div>
 
@@ -71,17 +82,31 @@
   </div>
 
 <script>
-  // hydrate
+  // hydrate from localStorage (values set in mobile-recharge.php)
   (function(){
     const msisdn = localStorage.getItem('re_msisdn') || '';
     const amt = localStorage.getItem('re_amt') || '0.00';
     const acct = localStorage.getItem('re_from') || '14512400000072';
-    document.getElementById('title').innerHTML = 'Mobile Recharge<br><span class="kv">'+msisdn+'</span>';
-    document.getElementById('amt').textContent = parseFloat(amt).toFixed(2);
-    document.getElementById('amt2').textContent = parseFloat(amt).toFixed(2);
+    const ctypeSaved = localStorage.getItem('re_ctype') || '';
+    const noteSaved = localStorage.getItem('re_note') || '';
+
+    document.getElementById('title').innerHTML =
+      'Mobile Recharge<br><span class="kv">'+ (msisdn || '') +'</span>';
+
+    const amtNum = parseFloat(amt || '0') || 0;
+    document.getElementById('amt').textContent = amtNum.toFixed(2);
+    document.getElementById('amt2').textContent = amtNum.toFixed(2);
     document.getElementById('fromAcc').innerHTML = '<b>Acc. '+acct+'</b>';
+
+    if (ctypeSaved) {
+      document.getElementById('ctype').value = ctypeSaved;
+    }
+    if (noteSaved) {
+      document.getElementById('note').value = noteSaved;
+    }
   })();
-  // selection effect
+
+  // selection effect for verification options
   document.querySelectorAll('.vopt').forEach(c=>{
     c.addEventListener('click', ()=>{
       document.querySelectorAll('.vopt').forEach(x=>x.classList.remove('active'));
@@ -89,14 +114,29 @@
       c.querySelector('input').checked = true;
     });
   });
+
   document.getElementById('go').addEventListener('click', ()=>{
-    // store connection type and "from" if changed
+    // store connection type, note and verification method
     const ctype = document.getElementById('ctype').value;
+    const note  = document.getElementById('note').value || 'Mobile Recharge';
     localStorage.setItem('re_ctype', ctype);
-    // amount/from already saved earlier; ensure amount present
+    localStorage.setItem('re_note', note);
+
+    const selectedVeri = document.querySelector('input[name="v"]:checked');
+    if (selectedVeri) {
+      localStorage.setItem('re_veri', selectedVeri.value);
+    } else {
+      // optional: force user to pick a verification method
+      alert('Please choose a verification method.');
+      return;
+    }
+
+    // ensure amount present
     const a = document.getElementById('amt').textContent || '0';
     localStorage.setItem('re_amt', a);
-    location.href = 'otp.html';
+
+    // go to OTP page (PHP version)
+    location.href = 'recharge-otp.php';
   });
 </script>
 </body>

@@ -50,7 +50,7 @@ $conn->close();
 <body>
   <div class="app">
     <div class="topbar">
-      <a class="linkish" href="fund-transfer_ui.html">← Back</a>
+      <a class="linkish" href="fund-transfer.php">← Back</a>
       <span class="step">1 / 2</span>
     </div>
 

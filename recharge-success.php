@@ -1,3 +1,19 @@
+<?php
+session_start();
+if (!isset($_SESSION['cid'])) {
+    header("Location: login.php");
+    exit;
+}
+
+// Make sure user just completed OTP for recharge
+if (empty($_SESSION['recharge_verified'])) {
+    header("Location: mobile-recharge.php");
+    exit;
+}
+
+// Optionally clear the flag so refresh doesn’t re-use the same verification
+unset($_SESSION['recharge_verified']);
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -40,7 +56,10 @@
           <div class="kv">Paid</div>
         </div>
         <div class="total">
-          <div class="kv"><b id="msisdn">+8801XXXXXXXXX</b><br>Connection: <span id="ctype">Prepaid</span></div>
+          <div class="kv">
+            <b id="msisdn">+8801XXXXXXXXX</b><br>
+            Connection: <span id="ctype">Prepaid</span>
+          </div>
           <div class="kv">Recipient</div>
         </div>
       </div>
@@ -58,27 +77,29 @@
 
       <div class="actions">
         <button class="btn" id="download">Download PDF receipt</button>
-        <a class="btn ghost" href="recharge.html">Make another recharge</a>
+        <a class="btn ghost" href="recharge.php">Make another recharge</a>
       </div>
     </div>
   </div>
 
 <script>
   function rnd(n){ return Math.floor(Math.random()*n).toString().padStart(4,'0'); }
+
   const data = {
     msisdn: localStorage.getItem('re_msisdn') || '',
     amount: parseFloat(localStorage.getItem('re_amt') || '0').toFixed(2),
-    from: localStorage.getItem('re_from') || '14512400000072',
-    ctype: localStorage.getItem('re_ctype') || 'Prepaid',
-    time: new Date().toLocaleString(),
-    txid: 'RCHG-' + Date.now().toString().slice(-6) + '-' + rnd(10000)
+    from:   localStorage.getItem('re_from') || '14512400000072',
+    ctype:  localStorage.getItem('re_ctype') || 'Prepaid',
+    time:   new Date().toLocaleString(),
+    txid:   'RCHG-' + Date.now().toString().slice(-6) + '-' + rnd(10000)
   };
-  document.getElementById('amt').textContent = data.amount;
+
+  document.getElementById('amt').textContent    = data.amount;
   document.getElementById('msisdn').textContent = data.msisdn;
-  document.getElementById('ctype').textContent = data.ctype;
-  document.getElementById('from').textContent = 'Acc. ' + data.from;
-  document.getElementById('time').textContent = data.time;
-  document.getElementById('txid').textContent = data.txid;
+  document.getElementById('ctype').textContent  = data.ctype;
+  document.getElementById('from').textContent   = 'Acc. ' + data.from;
+  document.getElementById('time').textContent   = data.time;
+  document.getElementById('txid').textContent   = data.txid;
 
   function openReceiptPDF(){
     const html = `<!doctype html>

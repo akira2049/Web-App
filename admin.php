@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['cid'], $_SESSION['type'], $_SESSION['admin_verified'])) {
+/*if (!isset($_SESSION['cid'], $_SESSION['type'], $_SESSION['admin_verified'])) {
     header("Location: admin_login.php");
     exit;
-}
+}*/
 
 // ---------- DATABASE CONNECTION ----------
 $host     = "localhost";
@@ -84,14 +84,17 @@ $cardsList    = [];
 $billersList  = [];
 
 // Accounts
+// Accounts
 $accSql = "SELECT 
              AccountNo, 
              CustomerID, 
+             account_name   AS AccountName,
              account_type   AS AccountType, 
              account_status AS AccountStatus, 
              Balance 
            FROM accounts
            ORDER BY AccountNo ASC";
+
 if ($res = $conn->query($accSql)) {
     while ($r = $res->fetch_assoc()) {
         $accountsList[] = $r;
@@ -100,9 +103,19 @@ if ($res = $conn->query($accSql)) {
 }
 
 // Cards
-$cardSql = "SELECT cardNo, customer_id, linkedAccount, cardType, cardStatus 
+// Cards
+$cardSql = "SELECT 
+              cardNo,
+              customer_id,
+              cardHolderName,
+              expiryDate,
+              cvc,
+              linkedAccount,
+              cardType,
+              cardStatus
             FROM cards
             ORDER BY cardNo ASC";
+
 if ($res = $conn->query($cardSql)) {
     while ($r = $res->fetch_assoc()) {
         $cardsList[] = $r;
@@ -327,10 +340,11 @@ if ($res = $conn->query($billerSql)) {
     .admin-table td {
       padding: 6px 8px;
       border-bottom: 1px solid #e5e7eb;
-      text-align: left;
+      text-align: center;
       vertical-align: middle;
       white-space: nowrap;
     }
+    /* Action text*/
 
     .admin-table th {
       font-weight: 600;
@@ -376,6 +390,18 @@ if ($res = $conn->query($billerSql)) {
     }
 
     .danger-link:hover {
+      text-decoration: underline;
+    }
+
+    .update-link {
+      color: #00416A;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      margin-right: 8px;
+    }
+
+    .update-link:hover {
       text-decoration: underline;
     }
 
@@ -590,6 +616,7 @@ if ($res = $conn->query($billerSql)) {
                   <tr>
                     <th>Account No</th>
                     <th>Customer ID</th>
+                    <th>Account Name</th>
                     <th>Type</th>
                     <th>Status</th>
                     <th>Balance</th>
@@ -601,6 +628,7 @@ if ($res = $conn->query($billerSql)) {
                   <tr>
                     <td><?php echo htmlspecialchars($a['AccountNo']); ?></td>
                     <td><?php echo htmlspecialchars($a['CustomerID']); ?></td>
+                    <td><?php echo htmlspecialchars($a['AccountName']); ?></td>
                     <td><?php echo htmlspecialchars($a['AccountType']); ?></td>
                     <td>
                       <?php
@@ -616,6 +644,10 @@ if ($res = $conn->query($billerSql)) {
                     </td>
                     <td><?php echo number_format((float)$a['Balance'], 2); ?></td>
                     <td>
+                      <a
+                        href="admin-update_account.php?account_no=<?php echo urlencode($a['AccountNo']); ?>"
+                        class="update-link"
+                      >Update</a>
                       <a
                         href="admin.php?del_acc=<?php echo urlencode($a['AccountNo']); ?>"
                         class="danger-link"
@@ -644,8 +676,11 @@ if ($res = $conn->query($billerSql)) {
                   <tr>
                     <th>Card Number</th>
                     <th>Customer ID</th>
+                    <th>Card Holder</th>
                     <th>Account No</th>
                     <th>Type</th>
+                    <th>Expiry</th>
+                    <th>CVC</th>
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
@@ -655,8 +690,11 @@ if ($res = $conn->query($billerSql)) {
                   <tr>
                     <td><?php echo htmlspecialchars($c['cardNo']); ?></td>
                     <td><?php echo htmlspecialchars($c['customer_id']); ?></td>
+                    <td><?php echo htmlspecialchars($c['cardHolderName']); ?></td>
                     <td><?php echo htmlspecialchars($c['linkedAccount']); ?></td>
                     <td><?php echo htmlspecialchars($c['cardType']); ?></td>
+                    <td><?php echo htmlspecialchars($c['expiryDate']); ?></td>
+                    <td><?php echo htmlspecialchars($c['cvc']); ?></td>
                     <td>
                       <?php
                         $cstatus = strtoupper($c['cardStatus']);
@@ -671,12 +709,17 @@ if ($res = $conn->query($billerSql)) {
                     </td>
                     <td>
                       <a
+                        href="admin-update_card_status.php?card_number=<?php echo urlencode($c['cardNo']); ?>"
+                        class="update-link"
+                      >Update</a>
+                      <a
                         href="admin.php?del_card=<?php echo urlencode($c['cardNo']); ?>"
                         class="danger-link"
                         onclick="return confirm('Are you sure you want to delete this card?');"
                       >Delete</a>
                     </td>
                   </tr>
+
                 <?php endforeach; ?>
                 </tbody>
               </table>
@@ -721,6 +764,10 @@ if ($res = $conn->query($billerSql)) {
                       </span>
                     </td>
                     <td>
+                      <a
+                        href="admin-update_biller.php?biller_code=<?php echo urlencode($b['biller_code']); ?>"
+                        class="update-link"
+                      >Update</a>
                       <a
                         href="admin.php?del_biller=<?php echo urlencode($b['biller_code']); ?>"
                         class="danger-link"
@@ -791,7 +838,6 @@ if ($res = $conn->query($billerSql)) {
               </div>
             </div>
 
-
             <div class="form-group">
               <label for="acc_type">Account Type</label>
               <select id="acc_type" name="account_type" required>
@@ -854,44 +900,7 @@ if ($res = $conn->query($billerSql)) {
             </div>
           </form>
         </div>
-
-        <div class="admin-card">
-          <h2><i class="fa-solid fa-arrow-rotate-right"></i> Update Account Status</h2>
-          <p class="subtitle">Change the status of an existing account.</p>
-
-          <form class="admin-form" method="post" action="admin-update_account.php">
-            <div class="form-group full">
-              <label for="upd_acc_number">Account No</label>
-              <input type="text" id="upd_acc_number" name="account_no" placeholder="14512400000085" required>
-            </div>
-
-            <div class="form-group">
-              <label for="upd_acc_status">New Status</label>
-              <select id="upd_acc_status" name="new_status" required>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="DORMANT">DORMANT</option>
-                <option value="CLOSED">CLOSED</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="upd_acc_reason">Reason (optional)</label>
-              <input type="text" id="upd_acc_reason" name="reason" placeholder="e.g. customer request">
-            </div>
-
-            <div class="form-group full">
-              <label for="upd_acc_note">Remarks</label>
-              <textarea id="upd_acc_note" name="remarks"></textarea>
-            </div>
-
-            <div class="admin-actions">
-              <button type="submit" class="admin-btn">
-                <i class="fa-solid fa-floppy-disk"></i>
-                Update Account Status
-              </button>
-            </div>
-          </form>
-        </div>
+        <!-- Update Account card REMOVED as per request -->
       </section>
 
       <!-- MANAGE CARDS -->
@@ -1001,43 +1010,8 @@ if ($res = $conn->query($billerSql)) {
           </form>
         </div>
 
-        <div class="admin-card">
-          <h2><i class="fa-solid fa-shield-halved"></i> Update Card Status</h2>
-          <p class="subtitle">Block, unblock or change the status of an existing card.</p>
+        <!-- Update Card Status card REMOVED as per request -->
 
-          <form class="admin-form" method="post" action="admin-update_card_status.php">
-            <div class="form-group full">
-              <label for="upd_card_number">Card Number</label>
-              <input type="text" id="upd_card_number" name="card_number" required>
-            </div>
-
-            <div class="form-group">
-              <label for="upd_card_status">New Status</label>
-              <select id="upd_card_status" name="new_status" required>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="BLOCKED">BLOCKED</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="upd_card_reason">Reason (optional)</label>
-              <input type="text" id="upd_card_reason" name="reason">
-            </div>
-
-            <div class="form-group full">
-              <label for="upd_card_note">Remarks</label>
-              <textarea id="upd_card_note" name="remarks"></textarea>
-            </div>
-
-            <div class="admin-actions">
-              <button type="submit" class="admin-btn">
-                <i class="fa-solid fa-floppy-disk"></i>
-                Update Card Status
-              </button>
-            </div>
-          </form>
-        </div>
       </section>
 
       <!-- MANAGE BILLERS -->
@@ -1088,51 +1062,8 @@ if ($res = $conn->query($billerSql)) {
           </form>
         </div>
 
-        <div class="admin-card">
-          <h2><i class="fa-solid fa-pen-to-square"></i> Update Biller</h2>
-          <p class="subtitle">Change status or information of an existing biller.</p>
+        <!-- Update Biller card REMOVED as per request -->
 
-          <form class="admin-form" method="post" action="admin-update_biller.php">
-            <div class="form-group">
-              <label for="upd_biller_code">Biller Code</label>
-              <input type="text" id="upd_biller_code" name="biller_code" required>
-            </div>
-
-            <div class="form-group">
-              <label for="upd_biller_status">New Status</label>
-              <select id="upd_biller_status" name="new_status" required>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="upd_biller_name">New Name (optional)</label>
-              <input type="text" id="upd_biller_name" name="new_name">
-            </div>
-
-            <div class="form-group">
-              <label for="upd_biller_type">Category</label>
-              <select id="upd_biller_type" name="category" required>
-                <option value="">Select category</option>
-                <option value="ELECTRICITY">Electricity</option>
-                <option value="GAS">Gas</option>
-                <option value="WATER">Water</option>
-                <option value="INTERNET">Internet</option>
-                <option value="MOBILE">Mobile</option>
-                <option value="TUITION">Tuition / Education</option>
-                <option value="OTHERS">Others</option>
-              </select>
-            </div>
-
-            <div class="admin-actions">
-              <button type="submit" class="admin-btn">
-                <i class="fa-solid fa-floppy-disk"></i>
-                Update Biller
-              </button>
-            </div>
-          </form>
-        </div>
       </section>
 
     </main>

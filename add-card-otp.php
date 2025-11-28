@@ -6,9 +6,19 @@ if (!isset($_SESSION['cid'])) {
     header("Location: login.php");
     exit;
 }
-if (!isset($_SESSION['add_card_pending'], $_SESSION['add_card_otp'], $_SESSION['add_card_otp_expires'])) {
+if (!isset($_SESSION['add_card_pending'])) {
     header("Location: add-card.php");
     exit;
+}
+
+// ---------- DEMO OTP GENERATION (no SMS) ----------
+if (!isset($_SESSION['add_card_otp'], $_SESSION['add_card_otp_expires'])) {
+    // 6-digit random demo OTP
+    $demoOtp = str_pad((string)random_int(0, 999999), 6, "0", STR_PAD_LEFT);
+    $_SESSION['add_card_otp']         = $demoOtp;
+    $_SESSION['add_card_otp_expires'] = time() + 300; // 5 minutes
+} else {
+    $demoOtp = $_SESSION['add_card_otp'];
 }
 
 $error = "";
@@ -20,15 +30,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Please enter the OTP.";
     } else {
         $now = time();
-        if ($now > $_SESSION['add_card_otp_expires']) {
+        if ($now > ($_SESSION['add_card_otp_expires'] ?? 0)) {
             $error = "OTP has expired. Please start again.";
             // clear old OTP
             unset($_SESSION['add_card_otp'], $_SESSION['add_card_otp_expires'], $_SESSION['add_card_pending']);
-        } else if ($otpInput !== $_SESSION['add_card_otp']) {
+        } else if (!isset($_SESSION['add_card_otp']) || $otpInput !== $_SESSION['add_card_otp']) {
             $error = "Invalid OTP. Please try again.";
         } else {
             // OTP correct: insert card into DB
-            $cid = $_SESSION['cid'];
+            $cid     = $_SESSION['cid'];
             $pending = $_SESSION['add_card_pending'];
 
             $cardNumber = $pending['card_number'];
@@ -48,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Adjust table/column names based on your actual schema
             $stmt = $conn->prepare("
-                INSERT INTO cards (CardNumber, ExpiryDate, CVC, CustomerID)
+                INSERT INTO cards (CardNo, expiryDate, cvc, customer_id)
                 VALUES (?, ?, ?, ?)
             ");
             if (!$stmt) {
@@ -92,9 +102,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       text-align:center;
       font-size:18px;
     }
+    .info-msg{
+      margin-top:8px;
+      font-size:13px;
+      color:#0a7f3f;
+    }
+    .btn-secondary{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:14px;
+      margin-top:10px;
+      background:#f9fafb;
+      cursor:pointer;
+    }
   </style>
 </head>
-<body>
+<body data-demo-otp="<?php echo htmlspecialchars($demoOtp, ENT_QUOTES); ?>">
   <div class="app">
     <div class="topbar">
       <a class="linkish" href="add-card.php">← Back</a>
@@ -108,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="kv" style="margin-bottom:18px">
           <b>OTP Verification</b><br>
           <span class="note">
-            We sent a One-Time Password (OTP) to your registered
+            We generated a demo OTP for your
             <?php echo htmlspecialchars($_SESSION['add_card_pending']['otp_method'] ?? 'SMS'); ?>.
           </span>
         </div>
@@ -126,12 +151,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
           </div>
 
-          <div class="footerbar">
+          <div class="footerbar" style="flex-direction:column;align-items:stretch;gap:8px;">
             <button class="btn" type="submit">Verify &amp; Add Card</button>
+
+            <!-- Dev-only JS demo helper -->
+            <button class="btn-secondary" type="button" id="fillDemoBtn">
+              Fill Demo OTP (Dev)
+            </button>
+            <div class="info-msg">
+              Demo OTP: <strong><?php echo htmlspecialchars($demoOtp); ?></strong>
+            </div>
           </div>
         </form>
       </div>
     </div>
   </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    const demoOtp   = (document.body.dataset.demoOtp || '').trim();
+    const btn       = document.getElementById('fillDemoBtn');
+    const otpInput  = document.querySelector('input[name="otp"]');
+
+    if (btn && otpInput && demoOtp) {
+      btn.addEventListener('click', function(){
+        otpInput.value = demoOtp;
+        otpInput.focus();
+      });
+    }
+  });
+</script>
 </body>
 </html>

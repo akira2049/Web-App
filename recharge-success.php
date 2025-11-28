@@ -11,8 +11,17 @@ if (empty($_SESSION['recharge_verified'])) {
     exit;
 }
 
-// Optionally clear the flag so refresh doesn’t re-use the same verification
-unset($_SESSION['recharge_verified']);
+// Get tx_id from session (set in OTP page)
+$txId = $_SESSION['last_recharge_txid'] ?? '';
+
+// If no tx_id, something went wrong or page was refreshed oddly
+if ($txId === '') {
+    header("Location: recharge.php");
+    exit;
+}
+
+// Optionally clear flags so refresh doesn’t reuse same verification
+unset($_SESSION['recharge_verified'], $_SESSION['last_recharge_txid']);
 ?>
 <!doctype html>
 <html lang="en">
@@ -39,7 +48,7 @@ unset($_SESSION['recharge_verified']);
     .rc-foot{margin-top:18px;font-size:12px;color:#6b7280}
   </style>
 </head>
-<body>
+<body data-txid="<?php echo htmlspecialchars($txId, ENT_QUOTES); ?>">
   <div class="app center card">
     <div class="section">
       <div class="ok">✅</div>
@@ -71,7 +80,8 @@ unset($_SESSION['recharge_verified']);
         </div>
         <div class="total">
           <div class="kv">Transaction ID</div>
-          <div class="kv"><b id="txid"></b></div>
+          <!-- ✅ filled from PHP -->
+          <div class="kv"><b id="txid"><?php echo htmlspecialchars($txId); ?></b></div>
         </div>
       </div>
 
@@ -85,13 +95,16 @@ unset($_SESSION['recharge_verified']);
 <script>
   function rnd(n){ return Math.floor(Math.random()*n).toString().padStart(4,'0'); }
 
+  const txidFromServer = <?php echo json_encode($txId); ?>;
+
   const data = {
     msisdn: localStorage.getItem('re_msisdn') || '',
     amount: parseFloat(localStorage.getItem('re_amt') || '0').toFixed(2),
     from:   localStorage.getItem('re_from') || '14512400000072',
     ctype:  localStorage.getItem('re_ctype') || 'Prepaid',
     time:   new Date().toLocaleString(),
-    txid:   'RCHG-' + Date.now().toString().slice(-6) + '-' + rnd(10000)
+    // ✅ use real tx_id from server
+    txid:   txidFromServer || ('RCHG-' + Date.now().toString().slice(-6) + '-' + rnd(10000))
   };
 
   document.getElementById('amt').textContent    = data.amount;

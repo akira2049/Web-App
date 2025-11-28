@@ -7,17 +7,15 @@ if (!isset($_SESSION['cid'])) {
 
 $host="localhost"; $user="root"; $pass=""; $db="my_bank";
 
-/* ---------- Infobip SMS helper ---------- */
+$infoMsg = "";
+$demoOtp = "";
+
+/* ---------- Infobip SMS helper (COMMENTED OUT FOR NOW) ---------- */
 /*
-   Fill in:
-   - $baseUrl with your Infobip base URL
-   - $apiKey with "App {your_api_key}"
-   - $sender with your approved sender ID (this changes the message sender from 'InfoSMS' to your name).
-*/
 function sendOtpSms($phone, $otp) {
-    $baseUrl = 'https://YOUR_BASE_URL.api.infobip.com';   // e.g. https://xyz1234c3f3c4.api.infobip.com
+    $baseUrl = 'https://YOUR_BASE_URL.api.infobip.com';
     $apiKey  = 'App YOUR_API_KEY_HERE';
-    $sender  = 'MyBank';  // change to your preferred / approved sender name
+    $sender  = 'MyBank';
 
     $url = $baseUrl . '/sms/2/text/advanced';
 
@@ -51,10 +49,8 @@ function sendOtpSms($phone, $otp) {
     $err      = curl_error($ch);
     $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
-
-    // You can log $response / $err / $status if you want
-    // For now we won't stop the flow if SMS fails; user still sees OTP on screen in dev mode (if you choose to).
 }
+*/
 
 /* ---------- Coming from overview: generate OTP ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_otp'])) {
@@ -67,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_otp'])) {
 
     $_SESSION['bill_veri_method'] = $method;
 
-    // validate that fromAcc belongs to this cid
     $cid = $_SESSION['cid'];
 
     $conn = new mysqli($host, $user, $pass, $db);
@@ -75,9 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_otp'])) {
         die("DB connection failed: " . $conn->connect_error);
     }
 
-    /*
-      Adjust CustomerID/cid depending on your schema.
-    */
+    // Make sure account belongs to this customer + get phone
     $stmt = $conn->prepare("
         SELECT a.AccountNo, a.Balance, u.phone
         FROM accounts a
@@ -85,7 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_otp'])) {
         WHERE a.AccountNo = ? AND a.CustomerID = ?
         LIMIT 1
     ");
-    $stmt->bind_param("si", $fromAcc, $cid);
+    // AccountNo = string, CustomerID = INT
+    $cidInt = (int)$cid;
+    $stmt->bind_param("si", $fromAcc, $cidInt);
     $stmt->execute();
     $res = $stmt->get_result();
     if (!($row = $res->fetch_assoc())) {
@@ -112,12 +107,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_otp'])) {
     }
     $_SESSION['bill_phone_mask'] = $phoneMask;
 
-    // Send via Infobip (remove this in dev if you don't want SMS cost)
-    sendOtpSms($phone, $otp);
+    // DEV MODE: don't actually send SMS now
+    // sendOtpSms($phone, $otp);
+
+    $infoMsg = "Demo OTP generated. Use the 'Fill Demo OTP' button to auto-fill it.";
 }
 
 // Handle OTP verification submit
-$error = "";
+$error   = "";
+$demoOtp = $_SESSION['bill_otp'] ?? '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
     $entered = trim($_POST['otp'] ?? '');
 
@@ -153,30 +152,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
             } else {
                 $conn->begin_transaction();
                 try {
-                    // 1) Debit account (ensure enough balance)
+                    $cidInt = (int)$cid;
+
+                    // 1) Lock account row and get current balance
+                    $stmt = $conn->prepare("
+                        SELECT Balance
+                        FROM accounts
+                        WHERE AccountNo = ?
+                          AND CustomerID = ?
+                        FOR UPDATE
+                    ");
+                    if (!$stmt) {
+                        throw new Exception("SQL error (select balance): " . $conn->error);
+                    }
+                    $stmt->bind_param("si", $billFrom, $cidInt);
+                    $stmt->execute();
+                    $res = $stmt->get_result();
+                    $row = $res->fetch_assoc();
+                    $stmt->close();
+
+                    if (!$row) {
+                        throw new Exception("Account not found.");
+                    }
+
+                    $fromBalanceBefore = (float)$row['Balance'];
+
+                    if ($fromBalanceBefore < $billAmt) {
+                        throw new Exception("Insufficient balance.");
+                    }
+
+                    $fromBalanceAfter = $fromBalanceBefore - $billAmt;
+
+                    // 2) Debit account
                     $stmt = $conn->prepare("
                         UPDATE accounts
-                        SET Balance = Balance - ?
+                        SET Balance = ?
                         WHERE AccountNo = ?
-                          AND Balance >= ?
+                          AND CustomerID = ?
                     ");
-                    $stmt->bind_param("dss", $billAmt, $billFrom, $billAmt);
+                    if (!$stmt) {
+                        throw new Exception("SQL error (update balance): " . $conn->error);
+                    }
+                    $stmt->bind_param("dsi", $fromBalanceAfter, $billFrom, $cidInt);
                     $stmt->execute();
                     if ($stmt->affected_rows === 0) {
-                        throw new Exception("Insufficient balance or invalid account.");
+                        $stmt->close();
+                        throw new Exception("Failed to update balance.");
                     }
                     $stmt->close();
 
-                    // 2) Insert bill_payments record
-                    $txnId = "BILL-" . date("YmdHis") . "-" . random_int(1000, 9999);
+                    // 3) Insert bill_payments record (matches latest schema)
+                    // bill_payments(tx_id, cid, from_acc, biller_name, biller_id,
+                    //               amount, from_balance_before, from_balance_after, note, status)
+                    $txnId  = "BILL-" . date("YmdHis") . "-" . random_int(1000, 9999);
+                    $status = 'SUCCESS';
+                    $note   = $biller . " bill payment";
+
                     $stmt2 = $conn->prepare("
-                      INSERT INTO bill_payments
-                        (cid, biller_name, customer_id, amount, account_no, txn_id, channel)
-                      VALUES (?,?,?,?,?,?,?)
+                        INSERT INTO bill_payments
+                            (tx_id, cid, from_acc, biller_name, biller_id,
+                             amount, from_balance_before, from_balance_after, note, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ");
+                    if (!$stmt2) {
+                        throw new Exception("SQL error (bill_payments prepare): " . $conn->error);
+                    }
+
+                    $cidStr = (string)$cid;
+
                     $stmt2->bind_param(
-                        "issdsss",
-                        $cid, $biller, $custId, $billAmt, $billFrom, $txnId, $channel
+                        "sssssdddss",
+                        $txnId,
+                        $cidStr,
+                        $billFrom,
+                        $biller,
+                        $custId,
+                        $billAmt,
+                        $fromBalanceBefore,
+                        $fromBalanceAfter,
+                        $note,
+                        $status
                     );
                     $stmt2->execute();
                     $stmt2->close();
@@ -247,6 +302,11 @@ $method    = $_SESSION['bill_veri_method'] ?? 'SMS';
       color:#b91c1c;
       font-size:14px;
     }
+    .info{
+      margin-top:8px;
+      color:#047857;
+      font-size:13px;
+    }
     .btnPrimary{
       width:100%;
       border:none;
@@ -259,9 +319,21 @@ $method    = $_SESSION['bill_veri_method'] ?? 'SMS';
       cursor:pointer;
       margin-top:18px;
     }
+    .btnSecondary{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:14px;
+      font-weight:600;
+      font-size:14px;
+      padding:10px 14px;
+      background:#f9fafb;
+      color:#111827;
+      cursor:pointer;
+      margin-top:10px;
+    }
   </style>
 </head>
-<body>
+<body data-demo-otp="<?php echo htmlspecialchars($demoOtp, ENT_QUOTES); ?>">
   <div class="app otp-card card">
     <div class="section">
 
@@ -270,6 +342,10 @@ $method    = $_SESSION['bill_veri_method'] ?? 'SMS';
         We sent a 6-digit code to <?php echo htmlspecialchars($phoneMask); ?> via
         <?php echo htmlspecialchars($method); ?>.
       </div>
+
+      <?php if ($infoMsg): ?>
+        <div class="info"><?php echo htmlspecialchars($infoMsg); ?></div>
+      <?php endif; ?>
 
       <form method="post">
         <input
@@ -284,10 +360,37 @@ $method    = $_SESSION['bill_veri_method'] ?? 'SMS';
         <?php if ($error): ?>
           <div class="error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-        <button class="btnPrimary" type="submit" name="verify_otp" value="1">Verify & Pay</button>
+
+        <button class="btnPrimary" type="submit" name="verify_otp" value="1">
+          Verify & Pay
+        </button>
+
+        <!-- DEV ONLY: JS helper to auto-fill demo OTP -->
+        <button class="btnSecondary" type="button" id="fillDemoOtp">
+          Fill Demo OTP (Dev)
+        </button>
+
+        <?php if ($demoOtp !== ''): ?>
+          <div class="info">Demo OTP: <strong><?php echo htmlspecialchars($demoOtp); ?></strong></div>
+        <?php endif; ?>
       </form>
 
     </div>
   </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    var demoOtp   = (document.body.dataset.demoOtp || '').trim();
+    var btn       = document.getElementById('fillDemoOtp');
+    var otpInput  = document.querySelector('input[name="otp"]');
+
+    if (btn && otpInput && demoOtp) {
+      btn.addEventListener('click', function(){
+        otpInput.value = demoOtp;
+        otpInput.focus();
+      });
+    }
+  });
+</script>
 </body>
 </html>

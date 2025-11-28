@@ -6,19 +6,20 @@ session_start();
 }*/
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['biller_id'])) {
-    // Coming from bill-billers.php
-    $billerId   = (int)($_POST['biller_id'] ?? 0);
+    // Coming from bill-payments.php / bill-billers.php
+    $billerId   = trim($_POST['biller_id'] ?? '');      // this is biller_code (varchar, e.g. 2077)
     $billerName = $_POST['biller_name'] ?? '';
     $billerLogo = $_POST['biller_logo'] ?? '';
-    $category   = $_POST['biller_category'] ?? '';
+    // hidden field name in bill-payments.php is "biller_type"
+    $category   = $_POST['biller_type'] ?? '';
 
-    if ($billerId <= 0 || $billerName === '') {
+    if ($billerId === '' || $billerName === '') {
         header("Location: bill-payments.php");
         exit;
     }
 
-    // Save basic biller info in session (optional, nice to have)
-    $_SESSION['bill_biller_id']   = $billerId;
+    // Save biller info into session
+    $_SESSION['bill_biller_code'] = $billerId;   // <-- biller_code from billers table
     $_SESSION['bill_biller_name'] = $billerName;
     $_SESSION['bill_biller_logo'] = $billerLogo;
     $_SESSION['bill_category']    = $category;
@@ -33,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['biller_id'])) {
     $billerLogo = $_SESSION['bill_biller_logo'] ?? '';
     $category   = $_SESSION['bill_category'] ?? '';
 }
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['biller_id'])) {
       <!-- This form goes to the OVERVIEW page -->
       <form method="post" action="bill-payment-overview.php">
 
-        <!-- pass biller info forward -->
+        <!-- biller info for next step -->
         <input type="hidden" name="bill_name" value="<?php echo htmlspecialchars($billerName); ?>">
         <input type="hidden" name="bill_logo" value="<?php echo htmlspecialchars($billerLogo); ?>">
         <input type="hidden" name="bill_type" value="<?php echo htmlspecialchars($category); ?>">

@@ -8,14 +8,23 @@ if (!isset($_SESSION['cid'])) {
 $cid = $_SESSION['cid'];
 
 // get POST from step1
-$fromAcc     = $_POST['fromAcc'] ?? '';
-$walletType  = $_POST['walletType'] ?? '';
-$walletNo    = $_POST['walletNo'] ?? '';
+$fromAcc     = $_POST['fromAcc']      ?? '';
+$walletType  = $_POST['walletType']   ?? '';
+$walletNo    = $_POST['walletNo']     ?? '';
 $receiver    = $_POST['receiverName'] ?? '';
-$amount      = $_POST['amount'] ?? '';
-$note        = $_POST['note'] ?? '';
+$amount      = $_POST['amount']       ?? '';
+$note        = $_POST['note']         ?? '';
+$txId        = $_POST['tx_id']        ?? '';  // <-- tx_id from JS in step 1
 
-if($fromAcc=='' || $walletType=='' || $walletNo=='' || $receiver=='' || $amount==''){
+// basic validation
+if (
+    $fromAcc   === '' ||
+    $walletType=== '' ||
+    $walletNo  === '' ||
+    $receiver  === '' ||
+    $amount    === '' ||
+    $txId      === ''      // <-- also require tx_id
+) {
     header("Location: mfs-transfer.php?err=1");
     exit;
 }
@@ -53,9 +62,11 @@ if($fromAcc=='' || $walletType=='' || $walletNo=='' || $receiver=='' || $amount=
             <div>
               <div class="kv">BDT</div>
               <div style="font-size:24px;font-weight:900;color:var(--primary)">
-                <?= number_format((float)$amount,2) ?>
+                <?= number_format((float)$amount, 2) ?>
               </div>
-              <div class="note">BDT <?= number_format((float)$amount,2) ?> + BDT 0.00</div>
+              <div class="note">
+                BDT <?= number_format((float)$amount, 2) ?> + BDT 0.00
+              </div>
             </div>
             <div class="kv">View Breakdown ⌄</div>
           </div>
@@ -65,17 +76,20 @@ if($fromAcc=='' || $walletType=='' || $walletNo=='' || $receiver=='' || $amount=
           <div class="label">Transfer To</div>
           <div class="kv">
             <b><?= htmlspecialchars($receiver) ?></b><br>
-            <?= htmlspecialchars($walletType) ?> • <span class="mask"><?= htmlspecialchars($walletNo) ?></span>
+            <?= htmlspecialchars($walletType) ?> • 
+            <span class="mask"><?= htmlspecialchars($walletNo) ?></span>
           </div>
         </div>
 
         <form action="mfs-transfer-process.php" method="post">
           <!-- pass data forward -->
-          <input type="hidden" name="fromAcc" value="<?= htmlspecialchars($fromAcc) ?>">
-          <input type="hidden" name="walletType" value="<?= htmlspecialchars($walletType) ?>">
-          <input type="hidden" name="walletNo" value="<?= htmlspecialchars($walletNo) ?>">
-          <input type="hidden" name="receiverName" value="<?= htmlspecialchars($receiver) ?>">
-          <input type="hidden" name="amount" value="<?= htmlspecialchars($amount) ?>">
+          <input type="hidden" name="fromAcc"     value="<?= htmlspecialchars($fromAcc) ?>">
+          <input type="hidden" name="walletType"  value="<?= htmlspecialchars($walletType) ?>">
+          <input type="hidden" name="walletNo"    value="<?= htmlspecialchars($walletNo) ?>">
+          <input type="hidden" name="receiverName"value="<?= htmlspecialchars($receiver) ?>">
+          <input type="hidden" name="amount"      value="<?= htmlspecialchars($amount) ?>">
+          <!-- keep same tx_id generated in step 1 -->
+          <input type="hidden" name="tx_id"       value="<?= htmlspecialchars($txId) ?>">
 
           <div class="row">
             <div class="label">Notes</div>
@@ -85,8 +99,12 @@ if($fromAcc=='' || $walletType=='' || $walletNo=='' || $receiver=='' || $amount=
           <div class="row">
             <div class="label">Verification</div>
             <div class="veri-grid" id="veri">
-              <label class="vcard"><input type="radio" name="veri" value="EMAIL" required> Email</label>
-              <label class="vcard"><input type="radio" name="veri" value="SMS" required> SMS</label>
+              <label class="vcard">
+                <input type="radio" name="veri" value="EMAIL" required> Email
+              </label>
+              <label class="vcard">
+                <input type="radio" name="veri" value="SMS" required> SMS
+              </label>
             </div>
           </div>
 
@@ -102,9 +120,9 @@ if($fromAcc=='' || $walletType=='' || $walletNo=='' || $receiver=='' || $amount=
 <script>
   // active border on verification cards
   const cards = document.querySelectorAll('.vcard');
-  cards.forEach(c=>{
-    c.addEventListener('click', ()=>{
-      cards.forEach(x=>x.classList.remove('active'));
+  cards.forEach(c => {
+    c.addEventListener('click', () => {
+      cards.forEach(x => x.classList.remove('active'));
       c.classList.add('active');
       c.querySelector('input').checked = true;
     });

@@ -13,7 +13,7 @@
   <header class="topbar">
     <div class="container">
       <div class="brand">
-        <span class="logo">SB</span>
+        <span class="logo">MB</span>
         <span class="brand-text">My Bank</span>
       </div>
       <nav class="nav">

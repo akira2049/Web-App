@@ -5,7 +5,7 @@ if (!isset($_SESSION['cid'])) {
 }
 
 // Load FPDF
-require_once __DIR__.'/fpdf/fpdf.php';
+require 'fpdf186/fpdf.php';
 
 $billName = $_SESSION['bill_name'] ?? 'N/A';
 $billId   = $_SESSION['bill_id'] ?? 'N/A';

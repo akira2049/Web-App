@@ -19,23 +19,25 @@ if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
 }
 
+$cid = $_SESSION['cid'];
+
 // ---------- FETCH TRANSACTIONS ----------
 
 // Add Money transactions
 $addMoney = [];
 $sql = "SELECT * FROM add_money_transactions WHERE cid=? ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $_SESSION['cid']);
+$stmt->bind_param("i", $cid);
 $stmt->execute();
 $res = $stmt->get_result();
 while ($r = $res->fetch_assoc()) $addMoney[] = $r;
 $stmt->close();
 
-// Bank transfers  ✅ FIXED HERE
+// Bank transfers
 $bankTransfers = [];
 $sql = "SELECT * FROM bank_transfers WHERE cid = ? ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $_SESSION['cid']); // use int binding (cid is INT)
+$stmt->bind_param("i", $cid);
 $stmt->execute();
 $res = $stmt->get_result();
 while ($r = $res->fetch_assoc()) {
@@ -47,7 +49,7 @@ $stmt->close();
 $mfsTransfers = [];
 $sql = "SELECT * FROM mfs_transfers WHERE cid=? ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $_SESSION['cid']);
+$stmt->bind_param("i", $cid);
 $stmt->execute();
 $res = $stmt->get_result();
 while ($r = $res->fetch_assoc()) $mfsTransfers[] = $r;
@@ -57,10 +59,21 @@ $stmt->close();
 $billPayments = [];
 $sql = "SELECT * FROM bill_payments WHERE cid=? ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $_SESSION['cid']);
+$stmt->bind_param("i", $cid);
 $stmt->execute();
 $res = $stmt->get_result();
 while ($r = $res->fetch_assoc()) $billPayments[] = $r;
+$stmt->close();
+
+// Mobile recharges (cid is VARCHAR(20) in table, so bind as string) :contentReference[oaicite:1]{index=1}
+$mobileRecharges = [];
+$sql = "SELECT * FROM mobile_recharges WHERE cid=? ORDER BY created_at DESC";
+$stmt = $conn->prepare($sql);
+$cidStr = (string)$cid;
+$stmt->bind_param("s", $cidStr);
+$stmt->execute();
+$res = $stmt->get_result();
+while ($r = $res->fetch_assoc()) $mobileRecharges[] = $r;
 $stmt->close();
 
 ?>
@@ -88,13 +101,41 @@ $stmt->close();
       padding: 30px 0 80px;
     }
 
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
     .page-title {
-      text-align: center;
       font-size: 28px;
       font-weight: 800;
-      margin-bottom: 30px;
       color: #ffffff;
       text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      margin: 0;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 14px;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      backdrop-filter: blur(6px);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .back-btn i {
+      font-size: 14px;
+    }
+    .back-btn:hover {
+      background: rgba(255,255,255,0.22);
+      transform: translateY(-1px);
     }
 
     .card-section {
@@ -159,7 +200,13 @@ $stmt->close();
 
 <div class="page-wrap">
 
-  <h1 class="page-title">Transaction History</h1>
+  <div class="page-header">
+    <h1 class="page-title">Transaction History</h1>
+    <a href="dashboard.php" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i>
+      Back to Dashboard
+    </a>
+  </div>
 
   <!-- ADD MONEY -->
   <section class="card-section">
@@ -264,7 +311,7 @@ $stmt->close();
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Tx ID</th>
               <th>From</th>
               <th>Wallet</th>
               <th>Number</th>
@@ -276,11 +323,65 @@ $stmt->close();
           <tbody>
           <?php foreach ($mfsTransfers as $t): ?>
             <tr>
-              <td><?= $t['id'] ?></td>
+              <td><?= htmlspecialchars($t['tx_id']) ?></td>
               <td><?= htmlspecialchars($t['from_acc']) ?></td>
               <td><?= htmlspecialchars($t['wallet_type']) ?></td>
               <td><?= htmlspecialchars($t['wallet_number']) ?></td>
               <td><?= number_format($t['amount'], 2) ?></td>
+              <td>
+                <?php
+                  $status = strtoupper($t['status']);
+                  $cls = "badge ";
+                  if ($status == "SUCCESS") $cls .= "badge-green";
+                  elseif ($status == "FAILED") $cls .= "badge-red";
+                  else $cls .= "badge-yellow";
+                ?>
+                <span class="<?= $cls ?>"><?= $status ?></span>
+              </td>
+              <td><?= $t['created_at'] ?></td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </section>
+
+  <!-- MOBILE RECHARGES -->
+  <section class="card-section">
+    <h2><i class="fa-solid fa-signal"></i> Mobile Recharges</h2>
+    <p class="subtitle">All your mobile top-ups</p>
+
+    <?php if (empty($mobileRecharges)): ?>
+      <p class="subtitle">No mobile recharge history found.</p>
+    <?php else: ?>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Tx ID</th>
+              <th>From Account</th>
+              <th>Operator</th>
+              <th>Mobile Number</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Balance Before</th>
+              <th>Balance After</th>
+              <th>Status</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php foreach ($mobileRecharges as $t): ?>
+            <tr>
+              <td><?= htmlspecialchars($t['tx_id']) ?></td>
+              <td><?= htmlspecialchars($t['from_acc']) ?></td>
+              <td><?= htmlspecialchars($t['operator']) ?></td>
+              <td><?= htmlspecialchars($t['mobile_number']) ?></td>
+              <td><?= htmlspecialchars($t['recharge_type']) ?></td>
+              <td><?= number_format($t['amount'], 2) ?></td>
+              <td><?= number_format($t['from_balance_before'], 2) ?></td>
+              <td><?= number_format($t['from_balance_after'], 2) ?></td>
               <td>
                 <?php
                   $status = strtoupper($t['status']);
@@ -312,9 +413,10 @@ $stmt->close();
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Tx ID</th>
               <th>Biller</th>
-              <th>Biller ID</th>
+              <th>Customer Ref ID</th>
+              <th>From Account</th>
               <th>Amount</th>
               <th>Status</th>
               <th>Time</th>
@@ -323,9 +425,10 @@ $stmt->close();
           <tbody>
           <?php foreach ($billPayments as $t): ?>
             <tr>
-              <td><?= $t['id'] ?></td>
+              <td><?= htmlspecialchars($t['tx_id'] ?? ($t['id'] ?? '')) ?></td>
               <td><?= htmlspecialchars($t['biller_name']) ?></td>
               <td><?= htmlspecialchars($t['biller_id']) ?></td>
+              <td><?= htmlspecialchars($t['from_acc'] ?? $t['account_no'] ?? '') ?></td>
               <td><?= number_format($t['amount'], 2) ?></td>
               <td>
                 <?php

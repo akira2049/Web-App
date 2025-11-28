@@ -2,10 +2,10 @@
 session_start();
 
 // Redirect if not logged in
-/*if (!isset($_SESSION['cid'])) {
+if (!isset($_SESSION['cid'])) {
     header("Location: login.php");
     exit;
-}*/
+}
 
 $cid = $_SESSION['cid'];  // logged-in customer ID
 
@@ -104,8 +104,8 @@ $conn->close();
 
     <a href="card-payment.php" class="card">
       <i class="fa-regular fa-credit-card fa-3x"></i>
-      <h3>Card Payment</h3>
-      <p>Pay credit card bills quickly and easily.</p>
+      <h3>My Cards</h3>
+      <p>View all your cards</p>
     </a>
 
     <a href="recharge.php" class="card">

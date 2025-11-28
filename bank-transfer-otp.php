@@ -37,20 +37,28 @@ function phoneE164($n){
 }
 $toPhone = phoneE164($userPhone);
 
-/* ---------- INFobip SMS CONFIG ---------- */
+/* ---------- INFobip SMS CONFIG (COMMENTED OUT FOR NOW) ---------- */
+/*
 $BASE_URL = "4ed4v6.api.infobip.com"; // example: xxxx.api.infobip.com
 $API_KEY  = "24817f74a2afaa722d8748347118e2a1-87b1545b-3fb1-4a53-aa43-37152f9f40ac";
+*/
 
-/* ---------- Generate OTP & send once ---------- */
-$error = "";
+$error   = "";
 $success = "";
+$demoOtp = "";
 
+/* ---------- Generate OTP (DEMO) ---------- */
 if (!isset($_SESSION['otp_code'])) {
 
     $otp = rand(100000, 999999);
     $_SESSION['otp_code'] = $otp;
     $_SESSION['otp_exp']  = time() + 180; // 3 mins
 
+    // Save for JS demo
+    $demoOtp = (string)$otp;
+
+    // ---- ORIGINAL SMS SENDING VIA INFOBIP (DISABLED) ----
+    /*
     $smsText = "Your EBL transfer OTP is: $otp";
 
     $payload = [
@@ -59,7 +67,7 @@ if (!isset($_SESSION['otp_code'])) {
                 "destinations" => [
                     ["to" => $toPhone]
                 ],
-                "from" => "EBLBank",     // Your sender name
+                "from" => "EBLBank",
                 "text" => $smsText
             ]
         ]
@@ -85,6 +93,13 @@ if (!isset($_SESSION['otp_code'])) {
     } else {
         $error = "Failed to send OTP. Please try again.";
     }
+    */
+
+    // DEMO MESSAGE INSTEAD OF REAL SMS
+    $success = "Demo OTP generated. Click \"Fill Demo OTP\" to auto-fill it.";
+} else {
+    // If already generated this request, still expose it to JS
+    $demoOtp = (string)($_SESSION['otp_code'] ?? '');
 }
 
 /* ---------- Verify OTP ---------- */
@@ -128,9 +143,21 @@ $pending = $_SESSION['ebl_pending_transfer'];
 .success{
   background:#e0ffe7;border:1px solid #89e6a8;padding:10px;margin-bottom:15px;border-radius:8px;
 }
+.btn-secondary{
+  border:1px solid #ddd;
+  background:#f9f9f9;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:14px;
+  cursor:pointer;
+  margin-left:8px;
+}
+.btn-secondary:hover{
+  background:#f0f0f0;
+}
 </style>
 </head>
-<body>
+<body data-demo-otp="<?php echo htmlspecialchars($demoOtp, ENT_QUOTES); ?>">
 
 <div class="app otp-box">
 
@@ -153,6 +180,9 @@ $pending = $_SESSION['ebl_pending_transfer'];
       <?php endif; ?>
 
       <p>Enter the 6-digit OTP sent to your phone number.</p>
+      <p style="font-size:13px;color:var(--muted);margin-top:-8px;margin-bottom:12px;">
+        (Demo mode: use the button to auto-fill the OTP.)
+      </p>
 
       <form method="post">
         <div class="row">
@@ -162,6 +192,7 @@ $pending = $_SESSION['ebl_pending_transfer'];
 
         <div class="footerbar">
           <button class="btn">Verify & Transfer</button>
+          <button type="button" class="btn-secondary" id="fill-demo-otp">Fill Demo OTP</button>
         </div>
       </form>
 
@@ -169,6 +200,22 @@ $pending = $_SESSION['ebl_pending_transfer'];
   </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var demoOtp = document.body.dataset.demoOtp || "";
+  var btn     = document.getElementById('fill-demo-otp');
+  var input   = document.querySelector('input[name="otp"]');
+
+  if (btn && input && demoOtp) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      input.value = demoOtp;
+      input.focus();
+    });
+  }
+});
+</script>
 
 </body>
 </html>

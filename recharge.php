@@ -22,8 +22,13 @@ if ($conn->connect_error) {
    Load user's accounts
 ------------------------------- */
 $accounts = [];
-$stmt = $conn->prepare("SELECT AccountNo FROM accounts WHERE CustomerID = ? ORDER BY AccountNo ASC");
-$stmt->bind_param("i", $cid);
+$sqlAcc = "SELECT AccountNo FROM accounts WHERE CustomerID = ? ORDER BY AccountNo ASC";
+$stmt = $conn->prepare($sqlAcc);
+if (!$stmt) {
+    die("Prepare failed for accounts: " . $conn->error);
+}
+// CustomerID is VARCHAR in your schema, so use "s"
+$stmt->bind_param("s", $cid);
 $stmt->execute();
 $res = $stmt->get_result();
 while ($row = $res->fetch_assoc()) {
@@ -34,17 +39,21 @@ $stmt->close();
 /* -------------------------------
    Load last 5 recharge numbers
    from mobile_recharges table
-   (assumed columns: id, cid, recharge_number, amount, created_at)
 ------------------------------- */
 $historyNumbers = [];
-$stmt = $conn->prepare("
-    SELECT DISTINCT mobile_number 
-    FROM mobile_recharges 
-    WHERE cid = ? 
-    ORDER BY id DESC 
+$sqlHist = "
+    SELECT DISTINCT mobile_number
+    FROM mobile_recharges
+    WHERE cid = ?
+    ORDER BY created_at DESC
     LIMIT 5
-");
-$stmt->bind_param("i", $cid);
+";
+$stmt = $conn->prepare($sqlHist);
+if (!$stmt) {
+    die("Prepare failed for history: " . $conn->error);
+}
+// cid is VARCHAR in mobile_recharges table
+$stmt->bind_param("s", $cid);
 $stmt->execute();
 $res = $stmt->get_result();
 while ($row = $res->fetch_assoc()) {
@@ -54,6 +63,7 @@ $stmt->close();
 
 $conn->close();
 ?>
+
 <!doctype html>
 <html lang="en">
 <head>

@@ -40,15 +40,17 @@ if ($result && $result->num_rows === 1) {
 $stmt->close();
 
 /* -------------------------------------------------
-   STEP 2: Get AccountNo + Balance using phone
+   STEP 2: Get AccountNo + Balance + Account Name using phone
 --------------------------------------------------*/
-$accountNo = "Not Found";
-$balance = 0;
+$accountNo   = "Not Found";
+$accountName = "Not Found";
+$balance     = 0;
 
 if ($phone !== null) {
 
-    // Correct: 1 variable → bind_param("s", $phone)
-    $sql2 = "SELECT AccountNo, Balance FROM accounts WHERE phone = ?";
+    $sql2 = "SELECT AccountNo, Balance, account_name 
+             FROM accounts 
+             WHERE phone = ?";
     $stmt2 = $conn->prepare($sql2);
     $stmt2->bind_param("s", $phone);
     $stmt2->execute();
@@ -56,8 +58,9 @@ if ($phone !== null) {
 
     if ($result2 && $result2->num_rows === 1) {
         $row2 = $result2->fetch_assoc();
-        $accountNo = $row2['AccountNo'];
-        $balance   = $row2['Balance'];
+        $accountNo   = $row2['AccountNo'];
+        $balance     = $row2['Balance'];
+        $accountName = $row2['account_name'];
     }
 
     $stmt2->close();
@@ -78,15 +81,29 @@ $conn->close();
 <body>
 
   <!-- Header -->
-  <header>
-    <h1>Welcome to Your Banking Dashboard</h1>
+  <header style="text-align:center; padding:20px 0;">
+      
+      <!-- Bank Logo -->
+      <img src="Abstract-humming-bird-colorful-logo-on-transparent-background-PNG.png" 
+          alt="Bank Logo"
+          style="width:90px; height:auto; margin-bottom:10px;">
 
-    <p style="text-align:center; color:#FFFFFF;">
-        Account No: <strong><?php echo htmlspecialchars($accountNo); ?></strong>
-        <br>
-        Balance: <strong style="color:#FFFFFF;">৳ <?php echo number_format($balance, 2); ?></strong>
-    </p>
+      <!-- Bank Name -->
+      <!--<h1 style="color:white; margin:0; font-size:32px;">? Bank</h1>-->
+
+      <!-- Account Details -->
+      <p style="text-align:center; color:#FFFFFF; line-height:1.6; margin-top:10px;">
+          Account Name:
+          <strong><?php echo htmlspecialchars($accountName); ?></strong>
+          <br>
+          Account No:
+          <strong><?php echo htmlspecialchars($accountNo); ?></strong>
+          <br>
+          Balance:
+          <strong style="color:#FFFFFF;">৳ <?php echo number_format($balance, 2); ?></strong>
+      </p>
   </header>
+
 
   <!-- Dashboard Features -->
   <section class="dashboard">
@@ -102,7 +119,7 @@ $conn->close();
       <p>Pay utility and service bills online.</p>
     </a>
 
-    <a href="card-payment.php" class="card">
+    <a href="my-cards.php" class="card">
       <i class="fa-regular fa-credit-card fa-3x"></i>
       <h3>My Cards</h3>
       <p>View all your cards</p>
@@ -150,13 +167,13 @@ $conn->close();
       <p>Add VISA or MasterCard</p>
     </a>
 
-    <a href="support.php" class="card">
+    <a href="help-support.php" class="card">
       <i class="fa-solid fa-phone-volume fa-3x"></i>
       <h3>Help & Support</h3>
       <p>Get connected with our support line for any query</p>
     </a>
 
-    <a href="find.php" class="card">
+    <a href="astra-locator.php" class="card">
       <i class="fa-solid fa-location-dot fa-3x"></i>
       <h3>Find SBL</h3>
       <p>Find our branches, offices, agent banking outlets and others</p>

@@ -1,5 +1,5 @@
 // ---- FPDF ----
-require 'fpdf.php';  // adjust path if needed (e.g. 'fpdf186/fpdf.php')
+require 'fpdf186.php';  // adjust path if needed (e.g. 'fpdf186/fpdf.php')
 
 class PDF extends FPDF {
     function Header() {

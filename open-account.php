@@ -1,37 +1,118 @@
 <?php
 // open_account.php
+$host = "localhost";
+$user = "root";
+$pass = "";
+$db   = "my_bank";
+
+$conn = new mysqli($host, $user, $pass, $db);
+if ($conn->connect_error) {
+    die("DB connection failed: " . $conn->connect_error);
+}
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Collect form values
-    $account_type     = $_POST['account_type'] ?? '';
-    $currency         = $_POST['currency'] ?? '';
-    $initial_deposit  = $_POST['initial_deposit'] ?? '';
-    $first_name       = $_POST['first_name'] ?? '';
-    $last_name        = $_POST['last_name'] ?? '';
-    $dob              = $_POST['dob'] ?? '';
-    $nid              = $_POST['nid'] ?? '';
-    $occupation       = $_POST['occupation'] ?? '';
+    $account_type     = $_POST['account_type']    ?? '';
+    $currency         = $_POST['currency']        ?? '';
+    $initial_deposit  = isset($_POST['initial_deposit'])
+                        ? (float)$_POST['initial_deposit']
+                        : 0;
+    $first_name       = $_POST['first_name']      ?? '';
+    $last_name        = $_POST['last_name']       ?? '';
+    $dob              = $_POST['dob']             ?? '';
+    $nid              = $_POST['nid']             ?? '';
+    $occupation       = $_POST['occupation']      ?? '';
     $source_of_funds  = $_POST['source_of_funds'] ?? '';
-    $email            = $_POST['email'] ?? '';
-    $phone            = $_POST['phone'] ?? '';
-    $alt_phone        = $_POST['alt_phone'] ?? '';
-    $addr1            = $_POST['addr1'] ?? '';
-    $addr2            = $_POST['addr2'] ?? '';
-    $city             = $_POST['city'] ?? '';
-    $postal           = $_POST['postal'] ?? '';
-    $country          = $_POST['country'] ?? '';
-    $kyc              = isset($_POST['kyc']) ? 1 : 0;
+    $email            = $_POST['email']           ?? '';
+    $phone            = $_POST['phone']           ?? '';
+    $alt_phone        = $_POST['alt_phone']       ?? '';
+    $addr1            = $_POST['addr1']           ?? '';
+    $addr2            = $_POST['addr2']           ?? '';
+    $city             = $_POST['city']            ?? '';
+    $postal           = $_POST['postal']          ?? '';
+    $country          = $_POST['country']         ?? '';
+    $kyc              = isset($_POST['kyc'])   ? 1 : 0;
     $terms            = isset($_POST['terms']) ? 1 : 0;
 
-    // You can now insert into DB here
-    // Example:
-    // include 'connect.php';
-    // $stmt = $conn->prepare("INSERT INTO account_applications (...) VALUES (...)");
+    // ---- Handle NID file upload (simple version) ----
+    $nid_file_path = null;
 
-    // For now, just a temporary success message:
-    echo "<script>alert('Application submitted successfully!');</script>";
+    if (!empty($_FILES['nid_file']['name'])) {
+        $uploadDir = __DIR__ . "/uploads/nid/";
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0777, true);
+        }
+
+        $originalName = basename($_FILES['nid_file']['name']);
+        $ext          = pathinfo($originalName, PATHINFO_EXTENSION);
+        $safeName     = time() . "_" . mt_rand(1000,9999) . "." . $ext;
+
+        $targetPath   = $uploadDir . $safeName;
+
+        if (move_uploaded_file($_FILES['nid_file']['tmp_name'], $targetPath)) {
+            // Save relative path in DB (e.g. uploads/nid/xxxxx.jpg)
+            $nid_file_path = "uploads/nid/" . $safeName;
+        } else {
+            // OPTIONAL: you can debug upload problems here
+            // echo "Upload failed: " . print_r($_FILES['nid_file'], true);
+        }
+    }
+
+    // Insert into account_open_requests
+    $sql = "INSERT INTO account_open_requests (
+                account_type, currency, initial_deposit,
+                first_name, last_name, dob, nid, nid_file,
+                occupation, source_of_funds,
+                email, phone, alt_phone,
+                addr1, addr2, city, postal, country,
+                kyc, terms
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        // Show exact prepare error
+        die("Prepare failed: " . $conn->error);
+    }
+
+    // Types:
+    // s  s   d   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   i   i
+    // |  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+    // 1  2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20
+    $stmt->bind_param(
+        "ssdsssssssssssssssii",
+        $account_type,
+        $currency,
+        $initial_deposit,
+        $first_name,
+        $last_name,
+        $dob,
+        $nid,
+        $nid_file_path,
+        $occupation,
+        $source_of_funds,
+        $email,
+        $phone,
+        $alt_phone,
+        $addr1,
+        $addr2,
+        $city,
+        $postal,
+        $country,
+        $kyc,
+        $terms
+    );
+
+    if ($stmt->execute()) {
+        echo "<script>alert('Application submitted successfully! Our team will review it.');</script>";
+    } else {
+        // Show the real MySQL error so we can debug
+        echo "<pre>Insert failed: " . htmlspecialchars($stmt->error) . "</pre>";
+        echo "<script>alert('Failed to submit application. Check server error output for details.');</script>";
+    }
+
+    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -65,7 +146,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <h1 style="color:#4b248c;margin:0 0 8px;">Open a New Bank Account</h1>
     <p style="color:#5e5e6a;margin:0 0 20px;">No account yet? Complete the steps below to create a <strong>Savings</strong> or <strong>Current</strong> account. Already a customer? <a href="signup.php">Create your iCloud portal account</a>.</p>
 
-    <form id="open-account-form" class="form-card" action="" method="post" novalidate>
+    <!-- IMPORTANT: enctype for file upload -->
+    <form id="open-account-form" class="form-card" action="" method="post" novalidate enctype="multipart/form-data">
 
       <!-- Account Preferences -->
       <fieldset class="fieldset">
@@ -119,7 +201,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <input type="text" name="nid" minlength="6" maxlength="25" required />
           </label>
 
-          <!-- NEW UPLOAD FIELD -->
+          <!-- UPLOAD FIELD -->
           <label class="field">
             <span>Upload NID / Passport Photo</span>
             <input type="file" name="nid_file" accept="image/*,.pdf" required />
@@ -142,7 +224,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           </label>
         </div>
       </fieldset>
-
 
       <!-- Contact & Address -->
       <fieldset class="fieldset">
@@ -222,3 +303,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
+<?php
+$conn->close();
+?>

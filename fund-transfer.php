@@ -59,7 +59,7 @@ if (!isset($_SESSION['cid'])) {
 
         <!-- BACK LINK -->
         <div class="linkrow" style="margin-top:16px">
-          <a class="linkish" href="dashboard.php">Go to my Banking →</a>
+          <a class="linkish" href="dashboard.php">Dashboard →</a>
         </div>
 
       </div>

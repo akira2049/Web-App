@@ -18,6 +18,242 @@ if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
 }
 
+/*
+    Utility functions to generate unique CID and AccountNo
+    used when approving new account_open_requests
+*/
+if (!function_exists('generateUniqueCid')) {
+    function generateUniqueCid(mysqli $conn): string {
+        while (true) {
+            $cid = (string)mt_rand(100000, 999999); // 6 digits
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM accounts WHERE CustomerID = ?");
+            $stmt->bind_param("s", $cid);
+            $stmt->execute();
+            $stmt->bind_result($cnt);
+            $stmt->fetch();
+            $stmt->close();
+            if ($cnt == 0) {
+                return $cid;
+            }
+        }
+    }
+}
+
+if (!function_exists('generateUniqueAccountNo')) {
+    function generateUniqueAccountNo(mysqli $conn): string {
+        while (true) {
+            $accNo = "14";
+            for ($i = 0; $i < 11; $i++) {
+                $accNo .= mt_rand(0, 9);
+            }
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM accounts WHERE AccountNo = ?");
+            $stmt->bind_param("s", $accNo);
+            $stmt->execute();
+            $stmt->bind_result($cnt);
+            $stmt->fetch();
+            $stmt->close();
+            if ($cnt == 0) {
+                return $accNo;
+            }
+        }
+    }
+}
+
+// ---------- HANDLE INFO UPDATE REQUESTS (APPROVE / DECLINE) ----------
+if (isset($_GET['approve_update']) || isset($_GET['decline_update'])) {
+    $cid = $_GET['approve_update'] ?? $_GET['decline_update'];
+
+    // Decline: just remove the request
+    if (isset($_GET['decline_update'])) {
+        $stmt = $conn->prepare("DELETE FROM info_update_requests WHERE cid = ?");
+        if ($stmt) {
+            $stmt->bind_param("s", $cid);
+            $stmt->execute();
+            $stmt->close();
+        }
+        header("Location: admin.php");
+        exit;
+    }
+
+    // Approve: read requested email/phone
+    if (isset($_GET['approve_update'])) {
+        $newEmail = null;
+        $newPhone = null;
+
+        $stmt = $conn->prepare("SELECT email, phone FROM info_update_requests WHERE cid = ? LIMIT 1");
+        if ($stmt) {
+            $stmt->bind_param("s", $cid);
+            $stmt->execute();
+            $stmt->bind_result($newEmail, $newPhone);
+            $stmt->fetch();
+            $stmt->close();
+        }
+
+        // Build dynamic UPDATE only for provided fields
+        $fields = [];
+        $types  = "";
+        $params = [];
+
+        if (!empty($newEmail)) {
+            $fields[] = "email = ?";
+            $types   .= "s";
+            $params[] = $newEmail;
+        }
+
+        if (!empty($newPhone)) {
+            $fields[] = "phone = ?";
+            $types   .= "s";
+            $params[] = $newPhone;
+        }
+
+        if (!empty($fields)) {
+            $sql = "UPDATE accounts SET " . implode(", ", $fields) . " WHERE CustomerID = ?";
+            $types   .= "s";
+            $params[] = $cid;
+
+            $stmt = $conn->prepare($sql);
+            if ($stmt) {
+                $stmt->bind_param($types, ...$params);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+
+        // Remove the request after processing
+        $stmt = $conn->prepare("DELETE FROM info_update_requests WHERE cid = ?");
+        if ($stmt) {
+            $stmt->bind_param("s", $cid);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        header("Location: admin.php");
+        exit;
+    }
+}
+
+// ---------- HANDLE NEW ACCOUNT OPEN REQUESTS (APPROVE / DECLINE) ----------
+if (isset($_GET['approve_open']) || isset($_GET['decline_open'])) {
+    $reqId = (int)($_GET['approve_open'] ?? $_GET['decline_open']);
+
+    // Decline: mark as DECLINED
+    if (isset($_GET['decline_open'])) {
+        $stmt = $conn->prepare(
+            "UPDATE account_open_requests 
+             SET account_status='DECLINED' 
+             WHERE req_id = ? AND account_status='PENDING'"
+        );
+        if ($stmt) {
+            $stmt->bind_param("i", $reqId);
+            $stmt->execute();
+            $stmt->close();
+        }
+        header("Location: admin.php");
+        exit;
+    }
+
+    // Approve: create account in `accounts` table
+    if (isset($_GET['approve_open'])) {
+
+        // 1) Load request (only if PENDING)
+        $sql = "SELECT 
+                    account_type, currency, initial_deposit,
+                    first_name, last_name, email, phone, nid
+                FROM account_open_requests
+                WHERE req_id = ? AND account_status='PENDING'
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            die("Prepare failed: " . $conn->error);
+        }
+        $stmt->bind_param("i", $reqId);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows !== 1) {
+            $stmt->close();
+            header("Location: admin.php");
+            exit;
+        }
+
+        $stmt->bind_result(
+            $req_account_type,
+            $req_currency,
+            $req_initial_deposit,
+            $req_first_name,
+            $req_last_name,
+            $req_email,
+            $req_phone,
+            $req_nid
+        );
+        $stmt->fetch();
+        $stmt->close();
+
+        // 2) Generate unique CID and AccountNo
+        $newCid    = generateUniqueCid($conn);
+        $newAccNo  = generateUniqueAccountNo($conn);
+
+        // 3) Map form account_type & currency to your accounts schema
+        $accountType = strtoupper($req_account_type);   // savings/current/student
+        if ($accountType === 'SAVINGS') {
+            $accountType = 'SAVINGS';
+        } elseif ($accountType === 'CURRENT') {
+            $accountType = 'CURRENT';
+        } elseif ($accountType === 'STUDENT') {
+            // if you don't have STUDENT in DB, map to SAVINGS:
+            $accountType = 'SAVINGS';
+        } else {
+            $accountType = 'SAVINGS';
+        }
+
+        $currency = strtoupper($req_currency) === 'USD' ? 'USD' : 'BDT';
+
+        $accountName    = trim($req_first_name . " " . $req_last_name);
+        $openingBalance = (float)$req_initial_deposit;
+
+        // 4) Insert into accounts table
+        $sql = "INSERT INTO accounts
+                    (AccountNo, CustomerID, account_name, account_type, account_status,
+                     Balance, currency, email, phone, nid)
+                VALUES
+                    (?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?)";
+
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            die("Prepare failed (insert account): " . $conn->error);
+        }
+
+        $stmt->bind_param(
+            "ssssdssss",
+            $newAccNo,
+            $newCid,
+            $accountName,
+            $accountType,
+            $openingBalance,
+            $currency,
+            $req_email,
+            $req_phone,
+            $req_nid
+        );
+
+        $stmt->execute();
+        $stmt->close();
+
+        // 5) Mark request as APPROVED
+        $stmt = $conn->prepare(
+            "UPDATE account_open_requests SET account_status='APPROVED' WHERE req_id = ?"
+        );
+        if ($stmt) {
+            $stmt->bind_param("i", $reqId);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        header("Location: admin.php");
+        exit;
+    }
+}
+
 // ---------- HANDLE DELETE ACTIONS ----------
 if (isset($_GET['del_acc'])) {
     $accNo = $_GET['del_acc'];
@@ -84,14 +320,15 @@ $cardsList    = [];
 $billersList  = [];
 
 // Accounts
-// Accounts
 $accSql = "SELECT 
              AccountNo, 
              CustomerID, 
              account_name   AS AccountName,
              account_type   AS AccountType, 
              account_status AS AccountStatus, 
-             Balance 
+             Balance,
+             email,
+             phone
            FROM accounts
            ORDER BY AccountNo ASC";
 
@@ -102,7 +339,6 @@ if ($res = $conn->query($accSql)) {
     $res->free();
 }
 
-// Cards
 // Cards
 $cardSql = "SELECT 
               cardNo,
@@ -130,6 +366,41 @@ $billerSql = "SELECT biller_code, biller_name, biller_category, biller_status
 if ($res = $conn->query($billerSql)) {
     while ($r = $res->fetch_assoc()) {
         $billersList[] = $r;
+    }
+    $res->free();
+}
+
+// Info update requests
+$infoUpdateRequests = [];
+$reqSql = "SELECT cid, email, phone FROM info_update_requests ORDER BY cid ASC";
+if ($res = $conn->query($reqSql)) {
+    while ($r = $res->fetch_assoc()) {
+        $infoUpdateRequests[] = $r;
+    }
+    $res->free();
+}
+
+// New account open requests (PENDING only) – only needed fields
+$openRequests = [];
+$sql = "SELECT
+            req_id,
+            first_name,
+            last_name,
+            nid,
+            nid_file,
+            phone,
+            email,
+            dob,
+            country,
+            source_of_funds,
+            created_at
+        FROM account_open_requests
+        WHERE account_status = 'PENDING'
+        ORDER BY created_at DESC";
+
+if ($res = $conn->query($sql)) {
+    while ($r = $res->fetch_assoc()) {
+        $openRequests[] = $r;
     }
     $res->free();
 }
@@ -247,6 +518,31 @@ if ($res = $conn->query($billerSql)) {
       opacity: 0.7;
     }
 
+    /* Subnav under Manage Accounts */
+    .sidebar-subnav {
+      margin-left: 32px;
+      margin-top: 2px;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .sidebar-subnav.open {
+      display: flex;
+    }
+    .sidebar-subnav a {
+      font-size: 13px;
+      padding: 6px 10px;
+    }
+    .sidebar-subnav a.active {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+    }
+    .sidebar-nav .caret {
+      margin-left: auto;
+      font-size: 11px;
+      opacity: .75;
+    }
+
     .admin-main {
       flex: 1;
       display: flex;
@@ -344,7 +640,6 @@ if ($res = $conn->query($billerSql)) {
       vertical-align: middle;
       white-space: nowrap;
     }
-    /* Action text*/
 
     .admin-table th {
       font-weight: 600;
@@ -507,12 +802,20 @@ if ($res = $conn->query($billerSql)) {
       color: #00416A;
     }
 
+    .nid-thumb {
+      max-width: 100px;
+      max-height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+
     @media (max-width: 900px) {
       .admin-layout { flex-direction: column; }
       .sidebar {
         width: 100%;
         flex-direction: row;
-        align-items: center;
+        align-items: flex-start;
         gap: 16px;
         padding: 12px 16px;
         overflow-x: auto;
@@ -520,6 +823,7 @@ if ($res = $conn->query($billerSql)) {
       .sidebar-nav { flex-direction: row; gap: 6px; flex: 1; }
       .sidebar-footer { display: none; }
       .stats-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .sidebar-subnav { margin-left: 12px; }
     }
 
     @media (max-width: 640px) {
@@ -546,10 +850,22 @@ if ($res = $conn->query($billerSql)) {
         <i class="fa-solid fa-gauge-high"></i>
         <span>Overview</span>
       </a>
-      <a data-section="accounts">
+
+      <!-- Manage Accounts parent (dropdown toggle) -->
+      <a href="#" id="nav-accounts-toggle">
         <i class="fa-solid fa-landmark"></i>
         <span>Manage Accounts</span>
+        <i class="fa-solid fa-chevron-down caret"></i>
       </a>
+      <div class="sidebar-subnav" id="accounts-subnav">
+        <a data-section="accounts-info">
+          <span>Account Info Update</span>
+        </a>
+        <a data-section="accounts-open-requests">
+          <span>New Account Requests</span>
+        </a>
+      </div>
+
       <a data-section="cards">
         <i class="fa-regular fa-credit-card"></i>
         <span>Manage Cards</span>
@@ -620,6 +936,8 @@ if ($res = $conn->query($billerSql)) {
                     <th>Type</th>
                     <th>Status</th>
                     <th>Balance</th>
+                    <th>Email</th>
+                    <th>Phone</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -643,6 +961,8 @@ if ($res = $conn->query($billerSql)) {
                       </span>
                     </td>
                     <td><?php echo number_format((float)$a['Balance'], 2); ?></td>
+                    <td><?php echo htmlspecialchars($a['email']); ?></td>
+                    <td><?php echo htmlspecialchars($a['phone']); ?></td>
                     <td>
                       <a
                         href="admin-update_account.php?account_no=<?php echo urlencode($a['AccountNo']); ?>"
@@ -783,124 +1103,135 @@ if ($res = $conn->query($billerSql)) {
         </div>
       </section>
 
-      <!-- MANAGE ACCOUNTS -->
-      <section id="section-accounts" class="admin-section">
-        <div class="admin-card">
-          <h2><i class="fa-solid fa-landmark"></i> Add New Account</h2>
-          <p class="subtitle">Open a new bank account for a customer.</p>
+      <!-- MANAGE ACCOUNTS — ACCOUNT INFO UPDATE -->
+      <section id="section-accounts-info" class="admin-section">
+        <div class="admin-card full-width">
+          <h2><i class="fa-solid fa-user-pen"></i> Pending Info Update Requests</h2>
+          <p class="subtitle">Approve or decline customer email / phone change requests.</p>
 
-          <form class="admin-form" method="post" action="admin-add_account.php">
-            <div class="form-group">
-              <label for="acc_cid">Customer ID</label>
-
-              <div style="display:flex; gap:6px;">
-                <input
-                  type="text"
-                  id="acc_cid"
-                  name="customer_id"
-                  placeholder="6 digit CID"
-                  required
-                  style="flex:1;"
-                  maxlength="6"
-                >
-                <button
-                  type="button"
-                  id="generate-cid-btn"
-                  class="admin-btn"
-                  style="padding-inline:10px;"
-                >
-                  Auto
-                </button>
-              </div>
+          <?php if (empty($infoUpdateRequests)): ?>
+            <p class="subtitle">No pending update requests.</p>
+          <?php else: ?>
+            <div class="table-scroll">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Customer ID</th>
+                    <th>New Email</th>
+                    <th>New Phone</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($infoUpdateRequests as $r): ?>
+                  <tr>
+                    <td><?php echo htmlspecialchars($r['cid']); ?></td>
+                    <td><?php echo htmlspecialchars($r['email'] ?? '-'); ?></td>
+                    <td><?php echo htmlspecialchars($r['phone'] ?? '-'); ?></td>
+                    <td>
+                      <a
+                        href="admin.php?approve_update=<?php echo urlencode($r['cid']); ?>"
+                        class="update-link"
+                        onclick="return confirm('Approve this contact info change?');"
+                      >Approve</a>
+                      <a
+                        href="admin.php?decline_update=<?php echo urlencode($r['cid']); ?>"
+                        class="danger-link"
+                        onclick="return confirm('Decline and remove this request?');"
+                      >Decline</a>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+                </tbody>
+              </table>
             </div>
-
-            <div class="form-group">
-              <label for="acc_number">Account No</label>
-
-              <div style="display:flex; gap:6px;">
-                <input 
-                  type="text" 
-                  id="acc_number" 
-                  name="account_no" 
-                  placeholder="14xxxxxxxxxxxx" 
-                  required
-                  style="flex:1;"
-                  maxlength="13"
-                >
-                <button 
-                  type="button" 
-                  id="generate-accno-btn" 
-                  class="admin-btn" 
-                  style="padding-inline:10px;"
-                >
-                  Auto
-                </button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="acc_type">Account Type</label>
-              <select id="acc_type" name="account_type" required>
-                <option value="">Choose type</option>
-                <option value="SAVINGS">Savings</option>
-                <option value="CURRENT">Current</option>
-                <option value="FDR">FDR</option>
-                <option value="LOAN">Loan</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="acc_balance">Opening Balance (BDT)</label>
-              <input type="number" id="acc_balance" name="opening_balance" placeholder="e.g. 1000" required>
-            </div>
-
-            <div class="form-group">
-              <label for="acc_currency">Currency</label>
-              <select id="acc_currency" name="currency" required>
-                <option value="BDT">BDT</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="acc_status">Status</label>
-              <select id="acc_status" name="status" required>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="DORMANT">DORMANT</option>
-                <option value="CLOSED">CLOSED</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="account_name">Account Name</label>
-              <input type="text" id="account_name" name="account_name" placeholder="Account Name" required>
-            </div>
-
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input type="text" id="email" name="email" required>
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Phone Number</label>
-              <input type="text" id="phone" name="phone" placeholder="Enter phone number" required>
-            </div>
-
-            <div class="form-group">
-              <label for="nid">NID</label>
-              <input type="text" id="nid" name="nid" placeholder="Enter nid number" required>
-            </div>
-
-            <div class="admin-actions">
-              <button type="submit" class="admin-btn">
-                <i class="fa-solid fa-plus"></i>
-                Create Account in Database
-              </button>
-            </div>
-          </form>
+          <?php endif; ?>
         </div>
-        <!-- Update Account card REMOVED as per request -->
+      </section>
+
+      <!-- MANAGE ACCOUNTS — NEW ACCOUNT OPEN REQUESTS -->
+      <section id="section-accounts-open-requests" class="admin-section">
+        <div class="admin-card full-width">
+          <h2><i class="fa-solid fa-user-plus"></i> New Account Requests</h2>
+          <p class="subtitle">
+            Review and approve customer account opening requests.  
+            (Shown: Name, NID, Phone, Email, Date of Birth, Nationality, Source of Income, NID Image)
+          </p>
+
+          <?php if (empty($openRequests)): ?>
+            <p class="subtitle">No pending account opening requests.</p>
+          <?php else: ?>
+            <div class="table-scroll">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Request ID</th>
+                    <th>Applicant Name</th>
+                    <th>NID Number</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Date of Birth</th>
+                    <th>Nationality</th>
+                    <th>Source of Income</th>
+                    <th>NID Image</th>
+                    <th>Submitted At</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                <?php foreach ($openRequests as $r): ?>
+                  <tr>
+                    <td><?php echo (int)$r['req_id']; ?></td>
+
+                    <td><?php echo htmlspecialchars($r['first_name'] . ' ' . $r['last_name']); ?></td>
+
+                    <td><?php echo htmlspecialchars($r['nid']); ?></td>
+
+                    <td><?php echo htmlspecialchars($r['phone']); ?></td>
+
+                    <td><?php echo htmlspecialchars($r['email']); ?></td>
+
+                    <td><?php echo htmlspecialchars($r['dob']); ?></td>
+
+                    <td><?php echo htmlspecialchars($r['country']); ?></td>
+
+                    <td><?php echo htmlspecialchars($r['source_of_funds']); ?></td>
+
+                    <td>
+                      <?php if (!empty($r['nid_file'])): ?>
+                        <a href="<?php echo htmlspecialchars($r['nid_file']); ?>" target="_blank">
+                          <img src="<?php echo htmlspecialchars($r['nid_file']); ?>" class="nid-thumb"><br>
+                          View
+                        </a>
+                      <?php else: ?>
+                        <span>-</span>
+                      <?php endif; ?>
+                    </td>
+
+                    <td><?php echo htmlspecialchars($r['created_at']); ?></td>
+
+                    <td>
+                      <a
+                        href="admin.php?approve_open=<?php echo (int)$r['req_id']; ?>"
+                        class="update-link"
+                        onclick="return confirm('Approve and create account for this request?');"
+                      >Approve</a>
+
+                      <a
+                        href="admin.php?decline_open=<?php echo (int)$r['req_id']; ?>"
+                        class="danger-link"
+                        onclick="return confirm('Decline this account opening request?');"
+                      >Decline</a>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+
+          <?php endif; ?>
+        </div>
       </section>
 
       <!-- MANAGE CARDS -->
@@ -1010,8 +1341,6 @@ if ($res = $conn->query($billerSql)) {
           </form>
         </div>
 
-        <!-- Update Card Status card REMOVED as per request -->
-
       </section>
 
       <!-- MANAGE BILLERS -->
@@ -1061,25 +1390,33 @@ if ($res = $conn->query($billerSql)) {
             </div>
           </form>
         </div>
-
-        <!-- Update Biller card REMOVED as per request -->
-
       </section>
 
     </main>
   </div>
 </div>
 
-<!-- Sidebar section switching -->
+<!-- Sidebar section switching + accounts dropdown -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const navLinks = document.querySelectorAll('.sidebar-nav a[data-section]');
+    const navLinks = document.querySelectorAll('.sidebar-nav a[data-section], .sidebar-subnav a[data-section]');
     const sections = {
-      overview: document.getElementById('section-overview'),
-      accounts: document.getElementById('section-accounts'),
-      cards: document.getElementById('section-cards'),
-      billers: document.getElementById('section-billers')
+      overview:                 document.getElementById('section-overview'),
+      'accounts-info':          document.getElementById('section-accounts-info'),
+      'accounts-open-requests': document.getElementById('section-accounts-open-requests'),
+      cards:                    document.getElementById('section-cards'),
+      billers:                  document.getElementById('section-billers')
     };
+
+    const accountsToggle = document.getElementById('nav-accounts-toggle');
+    const accountsSubnav = document.getElementById('accounts-subnav');
+
+    if (accountsToggle && accountsSubnav) {
+      accountsToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        accountsSubnav.classList.toggle('open');
+      });
+    }
 
     navLinks.forEach(link => {
       link.addEventListener('click', function (e) {
@@ -1088,9 +1425,13 @@ if ($res = $conn->query($billerSql)) {
         const target = this.getAttribute('data-section');
         if (!target || !sections[target]) return;
 
+        // Remove active from all section-links
         navLinks.forEach(l => l.classList.remove('active'));
+
+        // Mark this as active
         this.classList.add('active');
 
+        // Show correct section
         Object.keys(sections).forEach(key => {
           sections[key].classList.toggle('active', key === target);
         });
@@ -1157,17 +1498,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  cidInput.addEventListener('input', function () {
-    const cid = cidInput.value.trim();
-    clearTimeout(debounceTimer);
+  if (cidInput) {
+    cidInput.addEventListener('input', function () {
+      const cid = cidInput.value.trim();
+      clearTimeout(debounceTimer);
 
-    if (cid.length === 0) {
-      resetFields("");
-      return;
-    }
+      if (cid.length === 0) {
+        resetFields("");
+        return;
+      }
 
-    debounceTimer = setTimeout(() => loadByCid(cid), 400);
-  });
+      debounceTimer = setTimeout(() => loadByCid(cid), 400);
+    });
+  }
 });
 </script>
 
@@ -1261,100 +1604,6 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
   });
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const cidInput = document.getElementById('acc_cid');
-  const genCidBtn = document.getElementById('generate-cid-btn');
-
-  function generateSixDigitCid() {
-    // random number from 100000 to 999999
-    return Math.floor(100000 + Math.random() * 900000);
-  }
-
-  if (genCidBtn && cidInput) {
-    genCidBtn.addEventListener('click', function () {
-      cidInput.value = generateSixDigitCid();
-      cidInput.focus();
-    });
-  }
-
-  // optional: prevent non-numbers typing
-  if (cidInput) {
-    cidInput.addEventListener('input', function () {
-      cidInput.value = cidInput.value.replace(/\D/g, '').slice(0, 6);
-    });
-  }
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-  /* ---------------------------
-       AUTO GENERATE CID
-  ----------------------------*/
-  const cidInput = document.getElementById('acc_cid');
-  const genCidBtn = document.getElementById('generate-cid-btn');
-
-  function generateSixDigitCid() {
-    return Math.floor(100000 + Math.random() * 900000);
-  }
-
-  if (genCidBtn && cidInput) {
-    genCidBtn.addEventListener('click', function () {
-      cidInput.value = generateSixDigitCid();
-      cidInput.focus();
-    });
-  }
-
-  if (cidInput) {
-    cidInput.addEventListener('input', function () {
-      cidInput.value = cidInput.value.replace(/\D/g, '').slice(0, 6);
-    });
-  }
-
-
-  /* -----------------------------------------
-       AUTO GENERATE 13-DIGIT ACCOUNT NUMBER
-       Must start with 14
-     -----------------------------------------*/
-  const accNoInput = document.getElementById('acc_number');
-  const genAccNoBtn = document.getElementById('generate-accno-btn');
-
-  function generateAccountNumber() {
-    // Always start with 14
-    let number = "14";
-
-    // Generate the remaining 11 digits (to make total 13)
-    for (let i = 0; i < 11; i++) {
-      number += Math.floor(Math.random() * 10);
-    }
-
-    return number;
-  }
-
-  if (genAccNoBtn && accNoInput) {
-    genAccNoBtn.addEventListener('click', function () {
-      accNoInput.value = generateAccountNumber();
-      accNoInput.focus();
-    });
-  }
-
-  // Restrict manual input to numbers only, 13 digits max
-  if (accNoInput) {
-    accNoInput.addEventListener('input', function () {
-      accNoInput.value = accNoInput.value.replace(/\D/g, '').slice(0, 13);
-
-      // If admin types and forgets, auto-force start with 14
-      if (!accNoInput.value.startsWith("14")) {
-        accNoInput.value = "14" + accNoInput.value.replace(/^14/, "");
-      }
-    });
-  }
-
-});
 </script>
 
 </body>

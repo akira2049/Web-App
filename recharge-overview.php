@@ -23,7 +23,7 @@ if (!isset($_SESSION['cid'])) {
   <div class="app">
     <div class="topbar">
       <!-- back to PHP recharge step-1 page -->
-      <a class="linkish" href="mobile-recharge.php">← Back</a>
+      <a class="linkish" href="recharge.php">← Back</a>
       <span class="step">2 / 2</span>
     </div>
     <div class="h1" id="title">Mobile Recharge</div>

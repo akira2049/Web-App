@@ -16,8 +16,8 @@
   <header class="topbar">
     <div class="container">
       <div class="brand">
-        <span class="logo" aria-hidden="true">iB</span>
-        <span class="brand-text">iCloud Bank</span>
+        <span class="logo" aria-hidden="true">XB</span>
+        <span class="brand-text">X Bank</span>
       </div>
       <nav class="nav">
         <a href="#" aria-current="page">Home</a>

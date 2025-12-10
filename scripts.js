@@ -15,15 +15,33 @@
     pw2.addEventListener('input', checkMatch);
   }
 
-  // Generic form submit handler (demo only)
-  Array.from(document.querySelectorAll('form')).forEach(function(f){
-    f.addEventListener('submit', function(e){
-      if(!f.checkValidity()){
-        // Let browser show native messages
-        return;
-      }
-      e.preventDefault();
-      alert('Form submitted successfully (demo). Hook this up to your backend.');
-    });
+  // scripts.js (LIVE version – no demo submit blocking)
+
+document.addEventListener('DOMContentLoaded', () => {
+  const yearSpan = document.getElementById('year');
+  if (yearSpan) {
+    yearSpan.textContent = new Date().getFullYear();
+  }
+
+  const form = document.getElementById('signup-form');
+  if (!form) return;
+
+  // OPTIONAL: simple client-side password check (no preventDefault if OK)
+  const pw1 = document.getElementById('pw1');
+  const pw2 = document.getElementById('pw2');
+
+  form.addEventListener('submit', (e) => {
+    // basic front-end check; PHP will still re-validate
+    if (pw1 && pw2 && pw1.value !== pw2.value) {
+      e.preventDefault();   // only block if clearly invalid
+      alert('Passwords do not match.');
+      return;
+    }
+
+    // IMPORTANT:
+    // No "Form submitted successfully (demo)" and NO preventDefault here.
+    // Let the browser actually POST to signup.php so PHP runs.
   });
+});
+
 })();

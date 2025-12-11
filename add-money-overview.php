@@ -29,6 +29,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="utf-8">
   <title>Add Money — Overview</title>
   <link rel="stylesheet" href="transfer.css">
+  <style>
+    :root{ --primary:#00416A; }
+
+    /* Dashboard-style background + centered card */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+  </style>
 </head>
 <body>
   <div class="app">

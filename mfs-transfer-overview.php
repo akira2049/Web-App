@@ -34,9 +34,79 @@ if (
 <head>
   <meta charset="utf-8">
   <title>MFS Transfer — Overview</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
     :root{ --primary:#00416A; --primary-600:#005a91; }
+
+    /* Match dashboard background + centered card layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .total {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .note {
+      font-size:13px;
+      color:#666;
+      margin-top:4px;
+    }
+
+    .veri-grid{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .vcard{
+      border:1px solid #ddd;
+      border-radius:999px;
+      padding:8px 14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:14px;
+      background:#fafafa;
+      transition:0.2s;
+    }
+
+    .vcard input{
+      accent-color:var(--primary);
+    }
+
+    .vcard.active{
+      border-color:var(--primary);
+      background:#e6f1fb;
+    }
   </style>
 </head>
 <body>
@@ -83,13 +153,13 @@ if (
 
         <form action="mfs-transfer-process.php" method="post">
           <!-- pass data forward -->
-          <input type="hidden" name="fromAcc"     value="<?= htmlspecialchars($fromAcc) ?>">
-          <input type="hidden" name="walletType"  value="<?= htmlspecialchars($walletType) ?>">
-          <input type="hidden" name="walletNo"    value="<?= htmlspecialchars($walletNo) ?>">
-          <input type="hidden" name="receiverName"value="<?= htmlspecialchars($receiver) ?>">
-          <input type="hidden" name="amount"      value="<?= htmlspecialchars($amount) ?>">
+          <input type="hidden" name="fromAcc"      value="<?= htmlspecialchars($fromAcc) ?>">
+          <input type="hidden" name="walletType"   value="<?= htmlspecialchars($walletType) ?>">
+          <input type="hidden" name="walletNo"     value="<?= htmlspecialchars($walletNo) ?>">
+          <input type="hidden" name="receiverName" value="<?= htmlspecialchars($receiver) ?>">
+          <input type="hidden" name="amount"       value="<?= htmlspecialchars($amount) ?>">
           <!-- keep same tx_id generated in step 1 -->
-          <input type="hidden" name="tx_id"       value="<?= htmlspecialchars($txId) ?>">
+          <input type="hidden" name="tx_id"        value="<?= htmlspecialchars($txId) ?>">
 
           <div class="row">
             <div class="label">Notes</div>

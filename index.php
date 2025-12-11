@@ -16,8 +16,8 @@
   <header class="topbar">
     <div class="container">
       <div class="brand">
-        <span class="logo" aria-hidden="true">XB</span>
-        <span class="brand-text">X Bank</span>
+        <span class="logo" aria-hidden="true">AB</span>
+        <span class="brand-text">Astra Bank</span>
       </div>
       <nav class="nav">
         <a href="#" aria-current="page">Home</a>
@@ -139,7 +139,7 @@
 
   <footer class="footer">
     <div class="container footer-inner">
-      <p>© <?php echo date('Y'); ?> iCloud Bank. All rights reserved.</p>
+      <p>© <?php echo date('Y'); ?>Astra Bank. All rights reserved.</p>
       <div class="footer-links">
         <a href="#">Privacy</a>
         <a href="#">Terms</a>

@@ -18,7 +18,7 @@ $cid      = $_SESSION['cid'];
 $pdf = new FPDF();
 $pdf->AddPage();
 $pdf->SetFont('Arial','B',16);
-$pdf->Cell(0,10,'Bill Payment Receipt',0,1,'C');
+$pdf->Cell(0,10,'Astra Bank Bill Payment Receipt',0,1,'C');
 
 $pdf->SetFont('Arial','',12);
 $pdf->Ln(4);

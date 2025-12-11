@@ -5,10 +5,9 @@ if (!isset($_SESSION['cid'])) {
     exit;
 }
 
-$cid   = $_SESSION['cid'];
-$error = "";
+$cid     = $_SESSION['cid'];
+$error   = "";
 $success = "";
-$demoOtp = "";
 
 /* ---------- DB CONNECTION ---------- */
 $host = "localhost";
@@ -32,6 +31,10 @@ if ($row = $res->fetch_assoc()) {
 }
 $stmt->close();
 
+if ($phone === "") {
+    die("Phone number not found for this account.");
+}
+
 /* Mask phone for UI */
 function mask_phone($n) {
     $digits = preg_replace('/\D+/', '', $n);
@@ -41,12 +44,11 @@ function mask_phone($n) {
     return $prefix . "******" . $last2;
 }
 
-/* ---------- Infobip SMS sender (COMMENTED OUT FOR NOW) ---------- */
-/*
+/* ---------- Infobip SMS sender (DISABLED IN DEMO) ----------
 function send_infobip_otp($to, $otp) {
     // TODO: replace with your real Infobip credentials
-    $baseUrl = "https://{your-base-url}.api.infobip.com";
-    $apiKey  = "YOUR_API_KEY_HERE";
+    $baseUrl = "vy69ep.api.infobip.com"; // e.g. "https://xyz123.api.infobip.com"
+    $apiKey  = "a1d651fc0c0ed790d6799fc83b304b13-d3308d15-ffe1-4a74-a95c-c034f22507ea"; // e.g. "App xxxxx"
 
     $payload = [
         "messages" => [
@@ -74,29 +76,23 @@ function send_infobip_otp($to, $otp) {
 
     $response = curl_exec($ch);
     if ($response === false) {
-        // You can log curl_error($ch) if needed
+        // In production, log curl_error($ch) to a file
+        // error_log("Infobip error: " . curl_error($ch));
     }
     curl_close($ch);
 }
 */
 
-/* ---------- Generate DEMO OTP (NO SMS) ---------- */
-function generate_demo_otp() {
-    // 6-digit random OTP
-    $otp = str_pad((string)random_int(0, 999999), 6, "0", STR_PAD_LEFT);
-
-    $_SESSION['recharge_otp']         = $otp;
-    $_SESSION['recharge_otp_expires'] = time() + 300; // valid for 5 minutes
-}
-
-// If first time here or resend requested, generate a new demo OTP
+/* ---------- DEMO OTP GENERATION (FIXED 123456, NO SMS) ---------- */
+// If first time here or resend requested, set a fixed OTP
 if (!isset($_SESSION['recharge_otp']) || isset($_GET['resend'])) {
-    generate_demo_otp();
-    $success = "Demo OTP generated. Use the 'Fill Demo OTP' helper to auto-fill it.";
-}
+    // DEMO: fixed 6-digit OTP
+    $_SESSION['recharge_otp']         = '123456';
+    $_SESSION['recharge_otp_expires'] = time() + 300; // valid for 5 minutes
 
-// Expose the OTP for JS (demo only)
-$demoOtp = isset($_SESSION['recharge_otp']) ? $_SESSION['recharge_otp'] : "";
+    // Generic message (does not reveal OTP)
+    $success = "An OTP has been sent to your registered mobile number.";
+}
 
 /* ---------- Operator detection from mobile number (BD prefixes) ---------- */
 function detect_operator_from_msisdn($msisdn) {
@@ -254,11 +250,47 @@ $conn->close();
 <head>
   <meta charset="utf-8">
   <title>OTP Verification</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
-    .center{max-width:520px;margin:48px auto}
+    :root{ --primary:#00416A; }
+
+    /* Dashboard-style background + centered card */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .center{margin:0 auto;}
     .otp-box{display:flex;gap:10px;justify-content:center;margin:16px 0 8px}
-    .otp-input{width:56px;height:56px;text-align:center;font-size:22px;border:1.5px solid var(--border);border-radius:12px}
+    .otp-input{
+      width:56px;
+      height:56px;
+      text-align:center;
+      font-size:22px;
+      border:1.5px solid var(--border);
+      border-radius:12px;
+    }
     .small{color:var(--muted);text-align:center}
     .row-aux{display:flex;justify-content:space-between;align-items:center;margin:8px 0 18px}
     .timer{color:var(--muted)}
@@ -274,7 +306,7 @@ $conn->close();
     }
   </style>
 </head>
-<body data-demo-otp="<?php echo htmlspecialchars($demoOtp, ENT_QUOTES); ?>">
+<body>
   <div class="app center card">
     <div class="section">
       <div class="h1" style="margin-bottom:6px">OTP Verification</div>
@@ -293,12 +325,12 @@ $conn->close();
 
       <form method="post" id="otpForm">
         <div class="otp-box" id="box">
-          <input class="otp-input" maxlength="1" inputmode="numeric" />
-          <input class="otp-input" maxlength="1" inputmode="numeric" />
-          <input class="otp-input" maxlength="1" inputmode="numeric" />
-          <input class="otp-input" maxlength="1" inputmode="numeric" />
-          <input class="otp-input" maxlength="1" inputmode="numeric" />
-          <input class="otp-input" maxlength="1" inputmode="numeric" />
+          <input class="otp-input" type="password" maxlength="1" inputmode="numeric" />
+          <input class="otp-input" type="password" maxlength="1" inputmode="numeric" />
+          <input class="otp-input" type="password" maxlength="1" inputmode="numeric" />
+          <input class="otp-input" type="password" maxlength="1" inputmode="numeric" />
+          <input class="otp-input" type="password" maxlength="1" inputmode="numeric" />
+          <input class="otp-input" type="password" maxlength="1" inputmode="numeric" />
         </div>
 
         <input type="hidden" name="otp" id="otpHidden">
@@ -312,18 +344,10 @@ $conn->close();
 
         <div class="row-aux">
           <span class="linkish" id="resend">Resend code</span>
-          <span>
-            <span class="timer" id="count">01:30</span>
-            <span class="linkish" id="fillDemo" style="margin-left:10px;font-size:13px;">Fill Demo OTP</span>
-          </span>
+          <span class="timer" id="count">01:30</span>
         </div>
 
         <button type="submit" class="btn full" id="submit" disabled>Submit</button>
-
-        <!-- For development you can show the OTP, remove in production -->
-        <?php if (isset($_SESSION['recharge_otp'])): ?>
-          <div class="small" style="margin-top:8px">Demo code: <b><?php echo htmlspecialchars($_SESSION['recharge_otp']); ?></b></div>
-        <?php endif; ?>
       </form>
     </div>
   </div>
@@ -335,8 +359,6 @@ $conn->close();
   const resend    = document.getElementById('resend');
   const form      = document.getElementById('otpForm');
   const otpHidden = document.getElementById('otpHidden');
-  const fillDemo  = document.getElementById('fillDemo');
-  const demoOtp   = (document.body.dataset.demoOtp || "").trim();
 
   const fromAccHidden  = document.getElementById('fromAccHidden');
   const msisdnHidden   = document.getElementById('msisdnHidden');
@@ -395,7 +417,7 @@ $conn->close();
     if (noteHidden)     noteHidden.value     = note;
   })();
 
-  // Resend: reload page with ?resend=1 so PHP regenerates a new demo OTP
+  // Resend: reload page with ?resend=1 so PHP regenerates OTP (still demo 123456)
   resend.addEventListener('click', ()=>{
     window.location.href = 'recharge-otp.php?resend=1';
   });
@@ -409,17 +431,6 @@ $conn->close();
     }
     otpHidden.value = code;
   });
-
-  // Fill Demo OTP helper (same idea as bank transfer)
-  if (fillDemo && demoOtp && demoOtp.length === 6 && inputs.length === 6) {
-    fillDemo.addEventListener('click', ()=>{
-      for (let i = 0; i < 6; i++) {
-        inputs[i].value = demoOtp[i] || '';
-      }
-      if (inputs[5]) inputs[5].focus();
-      validate();
-    });
-  }
 
   // focus first box
   if (inputs[0]) inputs[0].focus();

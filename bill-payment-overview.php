@@ -65,8 +65,39 @@ $defaultFrom = $accounts[0]['AccountNo'];
 <head>
   <meta charset="utf-8">
   <title>Bill Payment — Overview</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
+    :root { --primary:#00416A; }
+
+    /* Match dashboard background + centered layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .billHead{
       display:flex;
       align-items:flex-start;
@@ -149,16 +180,6 @@ $defaultFrom = $accounts[0]['AccountNo'];
       line-height:1.3;
       margin-top:4px;
     }
-    .breakLink{
-      font-size:14px;
-      font-weight:600;
-      color:var(--primary);
-      text-decoration:underline;
-      margin-top:8px;
-      display:inline-flex;
-      align-items:center;
-      gap:4px;
-    }
 
     .notesWrap{
       margin-top:16px;
@@ -214,12 +235,16 @@ $defaultFrom = $accounts[0]['AccountNo'];
       justify-content:center;
       gap:8px;
     }
+    .vcard-sm input{
+      accent-color:var(--primary);
+    }
+    .vcard-sm.active{
+      border-color:var(--primary);
+      background:#e6f1fb;
+    }
 
     .footercta{
-      position:sticky;
-      bottom:0;
-      background:var(--bg);
-      padding-top:24px;
+      margin-top:24px;
     }
     .payBtn{
       width:100%;
@@ -311,5 +336,18 @@ $defaultFrom = $accounts[0]['AccountNo'];
       </div>
     </div>
   </div>
+
+<script>
+  // Make verification cards visually selectable
+  const vCards = document.querySelectorAll('.vcard-sm');
+  vCards.forEach(card => {
+    card.addEventListener('click', () => {
+      vCards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      const input = card.querySelector('input[type="radio"]');
+      if (input) input.checked = true;
+    });
+  });
+</script>
 </body>
 </html>

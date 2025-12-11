@@ -10,13 +10,76 @@ if (!isset($_SESSION['cid'])) {
 <head>
   <meta charset="utf-8">
   <title>Mobile Recharge — Overview</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
-    .total{display:flex;justify-content:space-between;gap:10px;padding:14px;border:1px solid var(--border);border-radius:12px;background:#fbfbfc}
+    :root{
+      --primary:#00416A;
+    }
+
+    /* Dashboard-style background + centered layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .total{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fbfbfc;
+    }
     .note{color:var(--muted);font-size:13px}
-    .veri{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
-    .vopt{padding:16px;border:1.5px solid var(--border);border-radius:14px;cursor:pointer}
-    .vopt.active{border-color:var(--primary)}
+
+    .veri{
+      display:grid;
+      gap:12px;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+    .vopt{
+      padding:16px;
+      border:1.5px solid var(--border);
+      border-radius:14px;
+      cursor:pointer;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      font-size:14px;
+      color:var(--primary);
+    }
+    .vopt input{
+      margin-right:4px;
+    }
+    .vopt.active{
+      border-color:var(--primary);
+      outline:2px solid #00416a22;
+      outline-offset:1px;
+    }
   </style>
 </head>
 <body>
@@ -126,7 +189,6 @@ if (!isset($_SESSION['cid'])) {
     if (selectedVeri) {
       localStorage.setItem('re_veri', selectedVeri.value);
     } else {
-      // optional: force user to pick a verification method
       alert('Please choose a verification method.');
       return;
     }

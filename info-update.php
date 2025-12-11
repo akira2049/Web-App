@@ -108,8 +108,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <title>Update Contact Info</title>
+
+  <!-- Global styles -->
   <link rel="stylesheet" href="transfer.css">
+
   <style>
+    :root{ --primary:#00416A; }
+
+    /* Dashboard-style background */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .h1 {
+      color:#ffffff;
+      text-shadow:0 1px 2px rgba(0,0,0,0.25);
+    }
+
     .subtitle {
       color: var(--muted);
       font-size: 14px;
@@ -119,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-size: 18px;
       font-weight: 700;
       margin-bottom: 10px;
+      color: var(--primary);
     }
     .info-row {
       font-size: 14px;
@@ -127,13 +161,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .info-label {
       font-weight: 600;
       color: #4b5563;
+      margin-right:4px;
     }
     .msg {
       margin-bottom: 12px;
       font-size: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background:#f9fafb;
     }
-    .msg.error { color: #b91c1c; }
-    .msg.success { color: #166534; }
+    .msg.error {
+      color: #b91c1c;
+      border:1px solid #fecaca;
+      background:#fef2f2;
+    }
+    .msg.success {
+      color: #166534;
+      border:1px solid #bbf7d0;
+      background:#f0fdf4;
+    }
+
+    /* Small form helpers */
+    .field-label {
+      display:block;
+      font-size:13px;
+      font-weight:600;
+      color:#4b5563;
+      margin-bottom:4px;
+      margin-top:10px;
+    }
+    .field {
+      width:100%;
+      border-radius:10px;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      font-size:14px;
+      box-sizing:border-box;
+    }
   </style>
 </head>
 <body>
@@ -160,10 +224,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="post">
           <input type="hidden" name="mode" value="verify">
+
           <label class="field-label">Password</label>
           <input type="password" name="password" required class="field">
-          <div style="margin-top: 12px;">
-            <button type="submit" class="btn">Verify Password</button>
+
+          <div style="margin-top: 16px;">
+            <button type="submit" class="btn">Continue</button>
           </div>
         </form>
 
@@ -188,15 +254,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="field-label">New Email</label>
           <input type="email" name="email" class="field" placeholder="Enter new email">
 
-          <label class="field-label" style="margin-top:10px;">New Phone</label>
+          <label class="field-label">New Phone</label>
           <input type="text" name="phone" class="field" placeholder="Enter new phone">
 
           <p class="subtitle" style="margin-top:8px;">
             Leave a field blank if you do not want to change it.
           </p>
 
-          <div style="margin-top: 12px;">
-            <button type="submit" class="btn">Submit Update Request</button>
+          <div style="margin-top: 16px;">
+            <button type="submit" class="btn">Submit</button>
           </div>
         </form>
 

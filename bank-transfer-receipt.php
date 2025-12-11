@@ -5,100 +5,91 @@ if (!isset($_SESSION['cid'])) {
     exit;
 }
 
-$txId = $_GET['tx'] ?? '';
-if ($txId == '') die("Transaction ID missing.");
+$cid = $_SESSION['cid'];
+$tid = $_GET['tid'] ?? '';
+
+if ($tid == '') die("Missing transaction ID.");
 
 /* ---------- DB CONNECTION ---------- */
-$host="localhost"; $user="root"; $password=""; $database="my_bank";
+$host="localhost"; 
+$user="root"; 
+$password="";
+$database="my_bank";
 $conn = new mysqli($host,$user,$password,$database);
 if ($conn->connect_error) die("DB failed: ".$conn->connect_error);
 
-/* ---------- Fetch transaction ---------- */
-$stmt = $conn->prepare("
-    SELECT id, transfer_type, from_acc, to_acc, amount, note, created_at
-    FROM bank_transfers
-    WHERE id = ?
-");
-$stmt->bind_param("i", $txId);
+/*
+   ONLY use bank_transfers table – guaranteed to exist.
+*/
+
+$sql = "
+SELECT *
+FROM bank_transfers
+WHERE ref_id = ? AND cid = ?
+LIMIT 1
+";
+
+$stmt = $conn->prepare($sql);
+if (!$stmt) {
+    die("SQL ERROR: " . $conn->error . "<br>QUERY:<br>" . $sql);
+}
+
+$stmt->bind_param("si", $tid, $cid);
 $stmt->execute();
-$res = $stmt->get_result();
-$tx = $res->fetch_assoc();
+$tx = $stmt->get_result()->fetch_assoc();
 $stmt->close();
+$conn->close();
 
 if (!$tx) die("Transaction not found.");
 
-/* ---------- Fetch sender name ---------- */
-$senderName = "Unknown";
-$stmt = $conn->prepare("
-    SELECT u.user_name 
-    FROM accounts a
-    JOIN user u ON a.CustomerID = u.cid
-    WHERE a.AccountNo = ?
-");
-$stmt->bind_param("s", $tx['from_acc']);
-$stmt->execute();
-$r = $stmt->get_result()->fetch_assoc();
-if ($r) $senderName = $r['user_name'];
-$stmt->close();
-
-/* ---------- Fetch receiver name ---------- */
-$receiverName = "Unknown";
-$stmt = $conn->prepare("
-    SELECT u.user_name 
-    FROM accounts a
-    JOIN user u ON a.CustomerID = u.cid
-    WHERE a.AccountNo = ?
-");
-$stmt->bind_param("s", $tx['to_acc']);
-$stmt->execute();
-$r = $stmt->get_result()->fetch_assoc();
-if ($r) $receiverName = $r['user_name'];
-$stmt->close();
-
-$conn->close();
-
-/* ---------- PDF LIBRARY ---------- */
-require_once "fpdf186/fpdf.php";
-
-/* ---------- Build PDF ---------- */
-$pdf = new FPDF();
+/* ---------- PDF ---------- */
+require "fpdf186/fpdf.php";
+$pdf = new FPDF('P','mm','A4');
 $pdf->AddPage();
 
-// Title
-$pdf->SetFont("Arial","B",16);
-$pdf->Cell(0,10,"My Bank - Transfer Receipt",0,1,"C");
+/* HEADER */
+$pdf->SetFont('Arial','B',16);
+$pdf->Cell(0,10,'Bank Transfer Receipt',0,1,'C');
+$pdf->SetFont('Arial','',11);
+$pdf->Cell(0,6,'Astra Bank',0,1,'C');
 $pdf->Ln(4);
 
-// Body font
-$pdf->SetFont("Arial","",12);
+/* BASIC INFO */
+$pdf->SetFont('Arial','',10);
+$pdf->Cell(0,6,"Customer CID: ".$cid,0,1);
+$pdf->Cell(0,6,"Transaction ID: ".$tid,0,1);
+$pdf->Cell(0,6,"Date & Time: ".date('d M Y, h:i A', strtotime($tx['created_at'])),0,1);
+$pdf->Ln(4);
 
-$pdf->Cell(60,8,"Transaction ID:",0,0);
-$pdf->Cell(0,8,$tx['id'],0,1);
+/* DETAILS */
+$pdf->SetFont('Arial','B',11);
+$pdf->Cell(0,7,"Transfer Details",0,1);
+$pdf->SetFont('Arial','',10);
 
-$pdf->Cell(60,8,"Transfer Type:",0,0);
-$pdf->Cell(0,8,$tx['transfer_type'],0,1);
+function kv($pdf, $label, $value){
+    $pdf->Cell(45,6,$label,0,0);
+    $pdf->Cell(0,6,": ".$value,0,1);
+}
 
-$pdf->Cell(60,8,"Sender Account:",0,0);
-$pdf->Cell(0,8,$tx['from_acc']." (".$senderName.")",0,1);
+kv($pdf, "From Account", $tx['from_acc']);
+kv($pdf, "To Account", $tx['to_acc']);
+kv($pdf, "Amount", number_format($tx['amount'],2)." BDT");
+kv($pdf, "Sender Before", number_format($tx['from_balance_before'],2)." BDT");
+kv($pdf, "Sender After", number_format($tx['from_balance_after'],2)." BDT");
+kv($pdf, "Receiver Before", number_format($tx['to_balance_before'],2)." BDT");
+kv($pdf, "Receiver After", number_format($tx['to_balance_after'],2)." BDT");
 
-$pdf->Cell(60,8,"Receiver Account:",0,0);
-$pdf->Cell(0,8,$tx['to_acc']." (".$receiverName.")",0,1);
+if (!empty($tx['note']))
+    kv($pdf, "Note", $tx['note']);
 
-$pdf->Cell(60,8,"Amount:",0,0);
-$pdf->Cell(0,8,"BDT ".$tx['amount'],0,1);
+$pdf->Ln(10);
 
-$pdf->Cell(60,8,"Note:",0,0);
-$pdf->MultiCell(0,8,$tx['note'] ?: "—");
+/* FOOTER */
+$pdf->SetFont('Arial','I',9);
+$pdf->MultiCell(0,5,
+"This is a system-generated receipt for your bank transfer.\n".
+"Please keep it for your records."
+);
 
-$pdf->Ln(2);
-$pdf->Cell(60,8,"Date & Time:",0,0);
-$pdf->Cell(0,8,$tx['created_at'] ?? date("Y-m-d H:i:s"),0,1);
-
-$pdf->Ln(6);
-$pdf->SetFont("Arial","I",10);
-$pdf->Cell(0,8,"Thank you for banking with us.",0,1,"C");
-
-// Output as download
-$filename = "OBT_Receipt_TX_".$tx['id'].".pdf";
-$pdf->Output("D", $filename);
+$pdf->Output("D", "Bank-Receipt-$tid.pdf");
 exit;

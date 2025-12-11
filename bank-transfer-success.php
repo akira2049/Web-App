@@ -1,77 +1,106 @@
 <?php
 session_start();
-if (!isset($_SESSION['cid'])) { 
-    header("Location: login.php"); 
-    exit; 
+if (!isset($_SESSION['cid'])) {
+    header("Location: login.php");
+    exit;
 }
 
-$txId = $_GET['tx'] ?? '';
+$cid = $_SESSION['cid'];
+$tid = $_GET['tid'] ?? '';
+
+if ($tid == '') {
+    die("Missing transaction ID.");
+}
 ?>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Transfer Success</title>
+  <title>Bank Transfer — Success</title>
+
+  <!-- Global styles -->
   <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
-    .app{
-      max-width:720px;
-      margin:0 auto;
-      padding:24px;
+    /* Match dashboard background + layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .subtitle {
+      color:#666;
+      font-size:14px;
+      margin-top:6px;
+      margin-bottom:18px;
+    }
+
+    .success-icon {
+      font-size:40px;
+      margin-bottom:10px;
+    }
+
+    .section-center {
       text-align:center;
     }
-    .success-card{
-      max-width:520px;
-      margin:0 auto;
-    }
-    .btn-outline{
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.5);
-    }
-    .btn-row{
+
+    .actions {
+      margin-top:18px;
       display:flex;
-      gap:10px;
       justify-content:center;
+      gap:10px;
       flex-wrap:wrap;
-      margin-top:12px;
     }
   </style>
 </head>
 <body>
-
-  <div class="app">
-    <div class="card success-card">
-      <div class="section">
-        <h2 style="margin-bottom:8px;">✅ Transfer Successful</h2>
-
-        <?php if($txId): ?>
-          <p>Transaction ID: <b><?= htmlspecialchars($txId) ?></b></p>
-
-          <div class="btn-row">
-            <!-- PDF receipt button -->
-            <a class="btn btn-outline" 
-               href="bank-transfer-receipt.php?tx=<?= urlencode($txId) ?>" 
-               target="_blank">
-              Download PDF Receipt
-            </a>
-
-            <a class="btn" href="fund-transfer.php">
-              Back to Transfers
-            </a>
-          </div>
-
-        <?php else: ?>
-          <p>Your transfer was completed successfully.</p>
-
-          <div class="btn-row">
-            <a class="btn" href="fund-transfer.php">Back to Transfers</a>
-          </div>
-        <?php endif; ?>
-
-      </div>
-    </div>
+<div class="app">
+  <div class="topbar">
+    <a class="linkish" href="dashboard.php">← Back to Dashboard</a>
   </div>
 
+  <div class="h1">Bank Transfer</div>
+
+  <div class="card">
+    <div class="section section-center">
+
+      <div class="success-icon">✅</div>
+      <div class="h2">Transfer Successful 🎉</div>
+
+      <p class="subtitle">Your bank transfer has been completed.</p>
+
+      <p class="kv">
+        Transaction ID:<br>
+        <b><?= htmlspecialchars($tid) ?></b>
+      </p>
+
+      <div class="actions">
+        <a class="btn" href="bank-transfer-receipt.php?tid=<?= urlencode($tid) ?>">Download Receipt</a>
+        <a class="btn" href="bank-transfer.php">Make Another Transfer</a>
+      </div>
+
+    </div>
+  </div>
+</div>
 </body>
 </html>

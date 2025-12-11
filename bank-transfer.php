@@ -13,12 +13,6 @@ $host="localhost"; $user="root"; $password=""; $database="my_bank";
 $conn = new mysqli($host,$user,$password,$database);
 if ($conn->connect_error) die("DB failed: ".$conn->connect_error);
 
-/*
-  Assumed tables:
-  accounts(AccountNo, Balance, cid)
-  user(cid, user_name)
-*/
-
 /* 1) FROM accounts: only those linked to logged-in cid */
 $fromAccounts = [];
 $stmt = $conn->prepare("
@@ -35,13 +29,12 @@ while($row = $res->fetch_assoc()){
 }
 $stmt->close();
 
-/* If user has no account, stop nicely */
 if (count($fromAccounts) === 0) {
     $conn->close();
     die("No accounts linked with this CID.");
 }
 
-/* 2) TO accounts: all accounts EXCEPT user’s own accounts */
+/* 2) TO accounts: all accounts EXCEPT user’s own */
 $accounts = [];
 $sql = "
     SELECT a.AccountNo, a.account_name AS holder_name
@@ -75,8 +68,31 @@ $stmt2->close();
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
   <style>
-    .app{max-width:720px;margin:0 auto;padding:24px;}
-    .search-input{margin-bottom:8px;width:100%;}
+    /* Apply the dashboard gradient background */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    /* Optional: Enhance card visibility on gradient */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .search-input { margin-bottom: 8px; width:100%; }
   </style>
 </head>
 <body>
@@ -95,37 +111,36 @@ $stmt2->close();
 
         <form method="POST" action="bank-transfer-overview.php" id="transferForm">
 
-          <!-- Transfer From (ONLY linked to this CID) -->
+          <!-- Transfer From -->
           <div class="row">
             <div class="label">Transfer From</div>
             <select id="fromAcc" name="from_acc" required>
               <?php foreach($fromAccounts as $fa): ?>
-                <option value="<?= htmlspecialchars($fa) ?>">
-                  Acc. <?= htmlspecialchars($fa) ?>
-                </option>
+              <option value="<?= htmlspecialchars($fa) ?>">
+                Acc. <?= htmlspecialchars($fa) ?>
+              </option>
               <?php endforeach; ?>
             </select>
           </div>
 
-          <!-- Transfer To (ALL accounts) -->
+          <!-- Transfer To -->
           <div class="row">
             <div class="label">Transfer To (Beneficiary)</div>
             <div>
 
-              <!-- Search -->
               <input
                 class="input search-input"
                 id="beneficiarySearch"
                 list="allAccounts"
                 placeholder="Search account number..."
               />
+
               <datalist id="allAccounts">
                 <?php foreach($accounts as $a): ?>
                   <option value="<?= htmlspecialchars($a['acc']) ?>">
                 <?php endforeach; ?>
               </datalist>
 
-              <!-- Dropdown -->
               <select id="beneficiarySelect" class="input" name="to_acc" required>
                 <option value="">Select beneficiary</option>
                 <?php foreach($accounts as $a): ?>
@@ -142,7 +157,7 @@ $stmt2->close();
             </div>
           </div>
 
-          <!-- Account Holder -->
+          <!-- Holder Info -->
           <div class="row">
             <div class="label">Account Holder</div>
             <div class="ahd" id="holderInfo" style="display:none;">
@@ -162,6 +177,7 @@ $stmt2->close();
             <div>
               <input class="input" id="amount" name="amount" type="number" min="1"
                      inputmode="decimal" placeholder="৳ 0.00" required>
+
               <div class="amounts" style="margin-top:10px">
                 <button type="button" class="chip" data-a="500">৳ 500</button>
                 <button type="button" class="chip" data-a="5000">৳ 5000</button>
@@ -189,12 +205,12 @@ $stmt2->close();
 <script>
   const accounts = <?php echo json_encode($accounts); ?>;
 
-  const beneSearch  = document.getElementById("beneficiarySearch");
-  const beneSelect  = document.getElementById("beneficiarySelect");
-  const holderInfo  = document.getElementById("holderInfo");
-  const ahName      = document.getElementById("ahName");
-  const ahAcc       = document.getElementById("ahAcc");
-  const holderHidden= document.getElementById("holderNameHidden");
+  const beneSearch   = document.getElementById("beneficiarySearch");
+  const beneSelect   = document.getElementById("beneficiarySelect");
+  const holderInfo   = document.getElementById("holderInfo");
+  const ahName       = document.getElementById("ahName");
+  const ahAcc        = document.getElementById("ahAcc");
+  const holderHidden = document.getElementById("holderNameHidden");
 
   function showHolder(accNo){
     const found = accounts.find(a => a.acc === accNo);
@@ -226,7 +242,7 @@ $stmt2->close();
     });
   });
 
-  // prevent same from/to
+  // prevent same from and to
   document.getElementById("transferForm").addEventListener("submit", (e)=>{
     const fromAcc = document.getElementById("fromAcc").value;
     const toAcc = beneSelect.value;

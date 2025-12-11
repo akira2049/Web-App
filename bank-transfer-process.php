@@ -6,94 +6,125 @@ if (!isset($_SESSION['cid'])) {
     exit;
 }
 
-if (
-    !isset($_SESSION['ebl_transfer_verified']) ||
-    $_SESSION['ebl_transfer_verified'] !== true ||
-    !isset($_SESSION['ebl_pending_transfer'])
-) {
-    header("Location: bank-transfer.php");
-    exit;
+if (!isset($_SESSION['ebl_pending_transfer'])) {
+    die("No pending transfer.");
 }
 
-$pending  = $_SESSION['ebl_pending_transfer'];
+$cid  = $_SESSION['cid'];
+$data = $_SESSION['ebl_pending_transfer'];
 
-$from_acc = trim($pending['from_acc'] ?? '');
-$to_acc   = trim($pending['to_acc'] ?? '');
-$amount   = (float)($pending['amount'] ?? 0);
-$note     = trim($pending['note'] ?? '');
+$fromAcc = $data['from_acc'];
+$toAcc   = $data['to_acc'];
+$amount  = floatval($data['amount']);
+$note    = $data['note'] ?? "";
+$transferType = $data['transfer_type'] ?? ""; // from your overview page
 
-if ($from_acc=='' || $to_acc=='' || $amount<=0 || $from_acc==$to_acc) {
-    die("Invalid transfer data.");
-}
+/* ---------- DB CONNECTION ---------- */
+$host="localhost"; 
+$user="root"; 
+$password="";
+$database="my_bank";
 
-
-/* DB */
-$host="localhost"; $user="root"; $password=""; $database="my_bank";
 $conn = new mysqli($host,$user,$password,$database);
-if ($conn->connect_error) die("DB failed: ".$conn->connect_error);
+if ($conn->connect_error) die("DB connection failed: ".$conn->connect_error);
 
-$conn->begin_transaction();
+/* ------------------------------------------
+   STEP 1 — FETCH SENDER BALANCE BEFORE
+------------------------------------------- */
+$stmt = $conn->prepare("SELECT Balance FROM accounts WHERE AccountNo = ?");
+$stmt->bind_param("s", $fromAcc);
+$stmt->execute();
+$senderResult = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-try {
-    // Lock both accounts for safe balance update
-    $stmt = $conn->prepare("SELECT AccountNo, Balance FROM accounts WHERE AccountNo=? FOR UPDATE");
-    $stmt->bind_param("s", $from_acc);
-    $stmt->execute();
-    $fromRes = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+if (!$senderResult) die("Sender account not found: $fromAcc");
 
-    $stmt = $conn->prepare("SELECT AccountNo, Balance FROM accounts WHERE AccountNo=? FOR UPDATE");
-    $stmt->bind_param("s", $to_acc);
-    $stmt->execute();
-    $toRes = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+$from_before = floatval($senderResult['Balance']);
+$from_after  = $from_before - $amount;
 
-    if (!$fromRes || !$toRes) {
-        throw new Exception("Account not found.");
-    }
+if ($from_after < 0) die("Insufficient balance.");
 
-    $fromBal = (float)$fromRes['Balance'];
-    $toBal   = (float)$toRes['Balance'];
+/* ------------------------------------------
+   STEP 2 — FETCH RECEIVER BALANCE BEFORE
+------------------------------------------- */
+$stmt = $conn->prepare("SELECT Balance FROM accounts WHERE AccountNo = ?");
+$stmt->bind_param("s", $toAcc);
+$stmt->execute();
+$receiverResult = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-    if ($fromBal < $amount) {
-        throw new Exception("Insufficient balance.");
-    }
+if (!$receiverResult) die("Receiver account not found: $toAcc");
 
-    $newFrom = $fromBal - $amount;
-    $newTo   = $toBal + $amount;
+$to_before = floatval($receiverResult['Balance']);
+$to_after  = $to_before + $amount;
 
-    // Update balances
-    $stmt = $conn->prepare("UPDATE accounts SET Balance=? WHERE AccountNo=?");
-    $stmt->bind_param("ds", $newFrom, $from_acc);
-    $stmt->execute();
-    $stmt->close();
+/* ------------------------------------------
+   STEP 3 — UPDATE SENDER BALANCE
+------------------------------------------- */
+$stmt = $conn->prepare("UPDATE accounts SET Balance = ? WHERE AccountNo = ?");
+$stmt->bind_param("ds", $from_after, $fromAcc);
+$stmt->execute();
+$stmt->close();
 
-    $stmt = $conn->prepare("UPDATE accounts SET Balance=? WHERE AccountNo=?");
-    $stmt->bind_param("ds", $newTo, $to_acc);
-    $stmt->execute();
-    $stmt->close();
+/* ------------------------------------------
+   STEP 4 — UPDATE RECEIVER BALANCE
+------------------------------------------- */
+$stmt = $conn->prepare("UPDATE accounts SET Balance = ? WHERE AccountNo = ?");
+$stmt->bind_param("ds", $to_after, $toAcc);
+$stmt->execute();
+$stmt->close();
 
-    // Insert transaction record
-    $txType = "OWN_TRANSFER";
-    $stmt = $conn->prepare("
-        INSERT INTO bank_transfers (transfer_type, from_acc, to_acc, amount, note)
-        VALUES (?,?,?,?,?)
-    ");
-    $stmt->bind_param("sssds", $txType, $from_acc, $to_acc, $amount, $note);
-    $stmt->execute();
-    $txId = $stmt->insert_id;
-    $stmt->close();
+/* ------------------------------------------
+   STEP 5 — GENERATE TRANSACTION ID (ref_id)
+------------------------------------------- */
+$ref_id = $cid . "-TX-" . random_int(100000, 999999);
 
-    $conn->commit();
-    // clear transfer session after success
-    unset($_SESSION['ebl_pending_transfer'], $_SESSION['ebl_transfer_verified'], $_SESSION['otp_code'], $_SESSION['otp_exp']);
+/* ------------------------------------------
+   STEP 6 — INSERT INTO bank_transfers
+------------------------------------------- */
+/*
+TABLE STRUCTURE:
+cid, transfer_type, from_acc, to_acc, amount,
+from_balance_before, from_balance_after,
+to_balance_before, to_balance_after,
+note, status, created_at, ref_id
+*/
 
-    // redirect to success page
-    header("Location: bank-transfer-success.php?tx=$txId");
-    exit;
+$sql = "
+INSERT INTO bank_transfers
+(cid, transfer_type, from_acc, to_acc, amount,
+ from_balance_before, from_balance_after,
+ to_balance_before, to_balance_after,
+ note, status, created_at, ref_id)
+VALUES
+(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUCCESS', NOW(), ?)
+";
 
+$stmt = $conn->prepare($sql);
+$stmt->bind_param(
+    "isssddddsss",
+    $cid,
+    $transferType,
+    $fromAcc,
+    $toAcc,
+    $amount,
+    $from_before,
+    $from_after,
+    $to_before,
+    $to_after,
+    $note,
+    $ref_id
+);
 
-} catch (Exception $e) {
-    $conn->rollback();
-    die("Transfer failed: " . $e->getMessage());
-}
+$stmt->execute();
+$stmt->close();
+
+/* ------------------------------------------
+   STEP 7 — CLEAR SESSION + REDIRECT
+------------------------------------------- */
+unset($_SESSION['ebl_pending_transfer']);
+
+header("Location: bank-transfer-success.php?tid=" . urlencode($ref_id));
+exit;
+
+?>

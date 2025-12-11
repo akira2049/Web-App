@@ -13,6 +13,7 @@ if ($from_acc=='' || $to_acc=='' || $amount=='') {
     header("Location: bank-transfer.php");
     exit;
 }
+
 // Save transfer info to session for OTP + processing
 $_SESSION['ebl_pending_transfer'] = [
     'from_acc' => $from_acc,
@@ -34,22 +35,59 @@ unset($_SESSION['otp_code'], $_SESSION['otp_exp'], $_SESSION['ebl_transfer_verif
   <link rel="stylesheet" href="transfer.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
-    .admin-content{width:100%;padding:24px;}
-    .overview-card{max-width:520px;margin:0 auto;}
-    .overview-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,0.15);}
-    .overview-row:last-child{border-bottom:none;}
-    .overview-label{opacity:.8;}
-    .overview-value{font-weight:600;}
+    /* Match dashboard background + layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    .admin-content {
+      width: 100%;
+      padding: 24px;
+    }
+
+    .overview-card {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .overview-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px dashed rgba(0,0,0,0.08);
+    }
+
+    .overview-row:last-child {
+      border-bottom: none;
+    }
+
+    .overview-label {
+      opacity: .8;
+    }
+
+    .overview-value {
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
 
 <div class="admin-layout">
   <aside class="sidebar">
-    <div class="sidebar-top">
-      <div class="logo"><i class="fa-solid fa-building-columns"></i> Shanto Bank</div>
-    </div>
-
     <!-- Sidebar buttons removed -->
     <nav class="side-nav"></nav>
   </aside>

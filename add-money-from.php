@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'new_c
         $_SESSION['am_from']        = "CARD";
         $_SESSION['am_save_card']   = $save;
 
-        // 🔥 SAVE REAL CARD NUMBER
+        // SAVE REAL CARD NUMBER
         $_SESSION['am_card_no']     = $no;
 
         header("Location: add-money-amount.php");
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'use_s
         $_SESSION['am_card_mask']   = "•••• •••• •••• " . substr($digits, -4);
         $_SESSION['am_from']        = "SAVED_CARD";
 
-        // 🔥 SAVE REAL CARD NUMBER
+        // SAVE REAL CARD NUMBER
         $_SESSION['am_card_no']     = $digits;
 
         header("Location: add-money-amount.php");
@@ -98,36 +98,65 @@ function maskCard($number) {
 <meta charset="utf-8">
 <title>Add From — Card</title>
 <link rel="stylesheet" href="transfer.css">
+
 <style>
-  .tabs{display:flex; gap:14px; margin:0 0 8px 0}
-  .tab{padding:10px 14px; border:1px solid var(--border); border-radius:999px; cursor:pointer; font-weight:700}
-  .tab[aria-selected="true"]{background:var(--primary); color:#fff; border-color:var(--primary)}
-  .empty{padding:16px; color:var(--muted)}
-  .err{color:#b00020; font-weight:700; margin:8px 0;}
-  .saved-list{display:flex; flex-direction:column; gap:10px; margin-top:10px;}
-  .saved-card-item{
-      padding:12px 14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:#fafafa;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-size:14px;
-      cursor:pointer;
-  }
+/* ⬇⬇⬇ DASHBOARD BACKGROUND THEME ⬇⬇⬇ */
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background: linear-gradient(135deg, #00416A, #E4E5E6);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 12px;
+}
+
+.app {
+    width: 100%;
+    max-width: 720px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ---------------- EXISTING STYLES ---------------- */
+.tabs{display:flex; gap:14px; margin:0 0 8px 0}
+.tab{padding:10px 14px; border:1px solid var(--border); border-radius:999px; cursor:pointer; font-weight:700}
+.tab[aria-selected="true"]{background:var(--primary); color:#fff; border-color:var(--primary)}
+.empty{padding:16px; color:var(--muted)}
+.err{color:#b00020; font-weight:700; margin:8px 0;}
+.saved-list{display:flex; flex-direction:column; gap:10px; margin-top:10px;}
+.saved-card-item{
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#fafafa;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:14px;
+    cursor:pointer;
+    width:100%;
+}
 </style>
 </head>
+
 <body>
 <div class="app">
   <div class="topbar">
     <a class="linkish" href="add-money.php">← Back</a>
     <span class="step">1 / 4</span>
   </div>
+
   <div class="h1">Add From</div>
 
   <div class="card">
     <div class="section">
+
       <div class="tabs" role="tablist">
         <button id="t1" class="tab" aria-selected="true">Saved Card</button>
         <button id="t2" class="tab" aria-selected="false">New Card</button>
@@ -189,6 +218,7 @@ function maskCard($number) {
           <button class="btn">Next</button>
         </div>
       </form>
+
     </div>
   </div>
 </div>
@@ -199,8 +229,20 @@ const t2=document.getElementById('t2');
 const saved=document.getElementById('panel-saved');
 const form=document.getElementById('cardForm');
 
-t1.onclick=()=>{ t1.setAttribute("aria-selected","true"); t2.setAttribute("aria-selected","false"); saved.hidden=false; form.hidden=true; };
-t2.onclick=()=>{ t2.setAttribute("aria-selected","true"); t1.setAttribute("aria-selected","false"); saved.hidden=true; form.hidden=false; };
+t1.onclick=()=>{
+  t1.setAttribute("aria-selected","true");
+  t2.setAttribute("aria-selected","false");
+  saved.hidden=false;
+  form.hidden=true;
+};
+
+t2.onclick=()=>{
+  t2.setAttribute("aria-selected","true");
+  t1.setAttribute("aria-selected","false");
+  saved.hidden=true;
+  form.hidden=false;
+};
 </script>
+
 </body>
 </html>

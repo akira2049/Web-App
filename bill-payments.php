@@ -42,8 +42,37 @@ $conn->close();
 <head>
   <meta charset="utf-8">
   <title>Bill Payments</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
+    /* Match dashboard background + layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .bill-search-wrap{
       display:flex;
       align-items:center;
@@ -305,38 +334,10 @@ $conn->close();
             </a>
 
             <a class="cat-tile"
-               href="bill-billers.php?cat=Telephone"
-               data-label="Telephone Landline Phone Bill Telephone bill">
-              <div class="cat-icon">📞</div>
-              <div>Telephone</div>
-            </a>
-
-            <a class="cat-tile"
                href="bill-billers.php?cat=Internet"
                data-label="Internet ISP SamOnline Internet bill">
               <div class="cat-icon">🌐</div>
               <div>Internet</div>
-            </a>
-
-            <a class="cat-tile"
-               href="bill-billers.php?cat=TV"
-               data-label="TV Cable DTH Television bill">
-              <div class="cat-icon">📺</div>
-              <div>TV</div>
-            </a>
-
-            <a class="cat-tile"
-               href="bill-billers.php?cat=Tuition Fee"
-               data-label="Tuition Fee School College University Education">
-              <div class="cat-icon">🎓</div>
-              <div>Tuition Fee</div>
-            </a>
-
-            <a class="cat-tile"
-               href="bill-billers.php?cat=VISA Fee"
-               data-label="VISA Fee Visa Application Embassy">
-              <div class="cat-icon">📘</div>
-              <div>VISA Fee</div>
             </a>
           </div>
         </div>

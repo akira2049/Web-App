@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'infobip_sms.php';
+// require_once 'infobip_sms.php'; // DEMO MODE: not needed
 
 // --- DATABASE CONFIG ---
 $host     = "localhost";
@@ -50,23 +50,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $error = "Admin phone number is missing in database.";
                     } else {
 
-                        $otp = random_int(100000, 999999);
+                        // DEMO OTP: fixed 123456, no SMS sending
+                        $otp = 123456;
 
                         $_SESSION['pending_admin_id'] = $user['cid'];
-                        $_SESSION['admin_phone'] = $user['phone'];
-                        $_SESSION['login_otp'] = $otp;
-                        $_SESSION['otp_expires'] = time() + 300;
+                        $_SESSION['admin_phone']      = $user['phone'];
+                        $_SESSION['login_otp']        = $otp;
+                        $_SESSION['otp_expires']      = time() + 300; // 5 minutes
 
-                        try {
-                            $msg = "Your admin login OTP is: $otp (valid 5 minutes)";
-                            infobip_send_sms($user['phone'], $msg);
-
-                            header("Location: admin_otp.php");
-                            exit;
-                        } 
-                        catch (Exception $e) {
-                            $error = "OTP sending failed: " . $e->getMessage();
-                        }
+                        // In demo mode we skip Infobip and just go to OTP page
+                        header("Location: admin_otp.php");
+                        exit;
                     }
                 }
             } else {

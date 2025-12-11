@@ -40,8 +40,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['biller_id'])) {
 <head>
   <meta charset="utf-8">
   <title>Enter Amount — <?php echo htmlspecialchars($billerName); ?></title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
+    :root{ --primary:#00416A; }
+
+    /* Match dashboard background + centered card layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .backlink{
       text-decoration:none;
       color:var(--primary);
@@ -51,10 +83,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['biller_id'])) {
       gap:6px;
       font-size:15px;
     }
+
     .amount-card{
-      max-width:540px;
-      margin:24px auto;
+      width:100%;
     }
+
     .billHead{
       display:flex;
       align-items:flex-start;
@@ -102,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['biller_id'])) {
       color:var(--primary);
       box-sizing:border-box;
       outline:none;
+      background:#fff;
     }
     .text-input::placeholder{
       color:var(--muted);
@@ -130,56 +164,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['biller_id'])) {
   </style>
 </head>
 <body>
-  <div class="app amount-card card">
-    <div class="section">
+  <div class="app">
+    <div class="amount-card card">
+      <div class="section">
 
-      <div class="topbar" style="margin-bottom:10px;">
-        <a class="backlink" href="javascript:history.back();">← Back</a>
-      </div>
-
-      <div class="billHead">
-        <div class="billLogo"><?php echo htmlspecialchars($billerLogo ?: substr($billerName,0,3)); ?></div>
-        <div>
-          <div class="billName"><?php echo htmlspecialchars($billerName); ?></div>
-          <?php if ($category): ?>
-            <div class="billSub"><?php echo htmlspecialchars($category); ?></div>
-          <?php endif; ?>
+        <div class="topbar" style="margin-bottom:10px;">
+          <a class="backlink" href="bill-billers.php">← Back</a>
         </div>
-      </div>
 
-      <!-- This form goes to the OVERVIEW page -->
-      <form method="post" action="bill-payment-overview.php">
-
-        <!-- biller info for next step -->
-        <input type="hidden" name="bill_name" value="<?php echo htmlspecialchars($billerName); ?>">
-        <input type="hidden" name="bill_logo" value="<?php echo htmlspecialchars($billerLogo); ?>">
-        <input type="hidden" name="bill_type" value="<?php echo htmlspecialchars($category); ?>">
-
-        <div class="field-label">Customer ID / Reference</div>
-        <input
-          type="text"
-          name="bill_id"
-          class="text-input"
-          placeholder="Connection ID"
-          required
-        >
-
-        <div class="field-label">Amount (BDT)</div>
-        <input
-          type="number"
-          name="bill_amt"
-          class="text-input amount-input"
-          step="0.01"
-          min="1"
-          placeholder="0.00"
-          required
-        >
-
-        <div class="footercta">
-          <button type="submit" class="nextBtn">Next</button>
+        <div class="billHead">
+          <div class="billLogo">
+            <?php echo htmlspecialchars($billerLogo ?: substr($billerName,0,3)); ?>
+          </div>
+          <div>
+            <div class="billName"><?php echo htmlspecialchars($billerName); ?></div>
+            <?php if ($category): ?>
+              <div class="billSub"><?php echo htmlspecialchars($category); ?></div>
+            <?php endif; ?>
+          </div>
         </div>
-      </form>
 
+        <!-- This form goes to the OVERVIEW page -->
+        <form method="post" action="bill-payment-overview.php">
+
+          <!-- biller info for next step -->
+          <input type="hidden" name="bill_name" value="<?php echo htmlspecialchars($billerName); ?>">
+          <input type="hidden" name="bill_logo" value="<?php echo htmlspecialchars($billerLogo); ?>">
+          <input type="hidden" name="bill_type" value="<?php echo htmlspecialchars($category); ?>">
+
+          <div class="field-label">Customer ID</div>
+          <input
+            type="text"
+            name="bill_id"
+            class="text-input"
+            placeholder="Connection ID"
+            required
+          >
+
+          <div class="field-label">Amount (BDT)</div>
+          <input
+            type="number"
+            name="bill_amt"
+            class="text-input amount-input"
+            step="0.01"
+            min="1"
+            placeholder="0.00"
+            required
+          >
+
+          <div class="footercta">
+            <button type="submit" class="nextBtn">Next</button>
+          </div>
+        </form>
+
+      </div>
     </div>
   </div>
 </body>

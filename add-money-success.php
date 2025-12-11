@@ -19,8 +19,42 @@ $ref    = $_SESSION['am_ref'] ?? ("AM".str_pad(strval(random_int(0,9999999999)),
   <link rel="stylesheet" href="transfer.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    .center{ text-align:center; padding:30px }
-    .receipt{ border:1px dashed var(--border); border-radius:12px; padding:16px; margin-top:12px; text-align:left }
+    :root{ --primary:#00416A; }
+
+    /* Dashboard-style background + centered card */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .center{ 
+      text-align:center; 
+      padding:30px 
+    }
+    .receipt{ 
+      border:1px dashed var(--border); 
+      border-radius:12px; 
+      padding:16px; 
+      margin-top:12px; 
+      text-align:left 
+    }
   </style>
 </head>
 <body>
@@ -59,7 +93,7 @@ $ref    = $_SESSION['am_ref'] ?? ("AM".str_pad(strval(random_int(0,9999999999)),
         </div>
 
         <div class="footerbar">
-          <button class="btn" id="dl">Download PDF Receipt</button>
+          <button class="btn" id="dl">Download Receipt</button>
         </div>
       </div>
     </div>

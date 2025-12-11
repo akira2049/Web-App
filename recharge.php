@@ -69,8 +69,37 @@ $conn->close();
 <head>
   <meta charset="utf-8">
   <title>Mobile Recharge — Step 1</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
+    :root{ --primary:#00416A; }
+
+    /* Dashboard-style background + centered layout */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .tabs{display:flex;gap:8px;margin:6px 0 12px}
     .tab{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--primary);cursor:pointer;font-weight:700}
     .tab.active{outline:2px solid var(--primary);outline-offset:2px}
@@ -142,7 +171,7 @@ $conn->close();
 
         <!-- History section (last 5 numbers) -->
         <div class="row" id="historySection" style="display:none;">
-          <div class="label">Last 5 Numbers</div>
+          <div class="label">Last Saved</div>
           <div>
             <?php if (!empty($historyNumbers)): ?>
               <div class="list">

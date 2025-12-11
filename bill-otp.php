@@ -5,17 +5,40 @@ if (!isset($_SESSION['cid'])) {
     exit;
 }
 
-$host="localhost"; $user="root"; $pass=""; $db="my_bank";
+$host = "localhost";
+$user = "root";
+$pass = "";
+$db   = "my_bank";
 
 $infoMsg = "";
 $demoOtp = "";
 
-/* ---------- Infobip SMS helper (COMMENTED OUT FOR NOW) ---------- */
-/*
+/* ---------- Helper: convert phone to E.164 (example for Bangladesh) ---------- */
+function phoneE164($n) {
+    // Keep digits only
+    $n = preg_replace('/\D+/', '', $n);
+
+    // If stored as 11-digit local starting with 0 (e.g., 017xxxxxxxx)
+    if (strlen($n) == 11 && strpos($n, '0') === 0) {
+        // 0XXXXXXXXXX -> +880XXXXXXXXXX
+        return '+88' . $n;
+    }
+
+    // If stored as 13-digit with 880 prefix (e.g., 88017xxxxxxxx)
+    if (strlen($n) == 13 && strpos($n, '880') === 0) {
+        return '+' . $n;
+    }
+
+    // Fallback: just prefix +
+    return '+' . $n;
+}
+
+/* ---------- Infobip SMS helper (DISABLED IN DEMO) ----------
 function sendOtpSms($phone, $otp) {
-    $baseUrl = 'https://YOUR_BASE_URL.api.infobip.com';
-    $apiKey  = 'App YOUR_API_KEY_HERE';
-    $sender  = 'MyBank';
+    // TODO: move these into a secure config / .env file
+    $baseUrl = 'https://pdy24l.api.infobip.com';       // MUST include https://
+    $apiKey  = 'Ye59439c63b2b9f2063cb024955556423-1e045f23-a5ff-4ebd-aa0f-39248273daa9'; // Replace with your real key
+    $sender  = 'MyBank';                               // Make sure this is allowed in Infobip
 
     $url = $baseUrl . '/sms/2/text/advanced';
 
@@ -37,25 +60,34 @@ function sendOtpSms($phone, $otp) {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
         CURLOPT_HTTPHEADER     => [
-            "Authorization: {$apiKey}",
+            "Authorization: App {$apiKey}",
             "Content-Type: application/json",
             "Accept: application/json"
         ],
         CURLOPT_POSTFIELDS     => json_encode($payload),
-        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_TIMEOUT        => 20,
     ]);
 
     $response = curl_exec($ch);
     $err      = curl_error($ch);
     $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+
+    // DEBUG: log for now; remove or reduce in production
+    if ($err) {
+        error_log("Infobip SMS error: $err");
+    } else {
+        error_log("Infobip SMS status {$status}, response: {$response}");
+    }
+
+    return [$status, $response, $err];
 }
 */
 
 /* ---------- Coming from overview: generate OTP ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_otp'])) {
-    $method   = $_POST['v'] ?? 'SMS';
-    $fromAcc  = trim($_POST['from_acc'] ?? '');
+    $method  = $_POST['v'] ?? 'SMS';
+    $fromAcc = trim($_POST['from_acc'] ?? '');
 
     if ($fromAcc === '') {
         die("No account selected. Please go back.");
@@ -95,27 +127,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_otp'])) {
 
     $_SESSION['bill_from'] = $fromAcc;
 
-    // Generate 6-digit OTP
-    $otp = random_int(100000, 999999);
+    // DEMO: Fixed 6-digit OTP (123456)
+    $otp = 123456;
     $_SESSION['bill_otp']         = (string)$otp;
-    $_SESSION['bill_otp_expires'] = time() + 5*60; // 5 minutes
+    $_SESSION['bill_otp_expires'] = time() + 5 * 60; // 5 minutes
 
-    // Mask phone for display
+    // Mask phone for display (use original stored format)
     $phoneMask = $phone;
-    if (strlen($phone) >= 5) {
-        $phoneMask = substr($phone, 0, 3) . "*****" . substr($phone, -2);
+    if (strlen($phoneMask) >= 5) {
+        $phoneMask = substr($phoneMask, 0, 3) . "*****" . substr($phoneMask, -2);
     }
     $_SESSION['bill_phone_mask'] = $phoneMask;
 
-    // DEV MODE: don't actually send SMS now
-    // sendOtpSms($phone, $otp);
+    // DEMO: Do NOT send SMS in this mode
+    // $phoneForSms = phoneE164($phone);
+    // sendOtpSms($phoneForSms, $otp);
 
-    $infoMsg = "Demo OTP generated. Use the 'Fill Demo OTP' button to auto-fill it.";
+    // Info message for user (generic, no OTP shown)
+    $infoMsg = "A 6-digit OTP has been sent to your registered phone number.";
 }
 
 // Handle OTP verification submit
-$error   = "";
-$demoOtp = $_SESSION['bill_otp'] ?? '';
+$error = "";
+// DEMO: no longer exposing OTP to screen
+// $demoOtp = $_SESSION['bill_otp'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
     $entered = trim($_POST['otp'] ?? '');
@@ -201,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
                     }
                     $stmt->close();
 
-                    // 3) Insert bill_payments record (matches latest schema)
+                    // 3) Insert bill_payments record
                     // bill_payments(tx_id, cid, from_acc, biller_name, biller_id,
                     //               amount, from_balance_before, from_balance_after, note, status)
                     $txnId  = "BILL-" . date("YmdHis") . "-" . random_int(1000, 9999);
@@ -269,11 +304,39 @@ $method    = $_SESSION['bill_veri_method'] ?? 'SMS';
 <head>
   <meta charset="utf-8">
   <title>Bill Payment — OTP Verification</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="dashboard.css">
   <link rel="stylesheet" href="transfer.css">
+
   <style>
+    :root{ --primary:#00416A; }
+
+    /* Dashboard-style background + centering */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .otp-card{
-      max-width:480px;
-      margin:32px auto;
+      margin:0 auto;
     }
     .otp-title{
       font-size:20px;
@@ -319,78 +382,61 @@ $method    = $_SESSION['bill_veri_method'] ?? 'SMS';
       cursor:pointer;
       margin-top:18px;
     }
-    .btnSecondary{
-      width:100%;
-      border:1px solid var(--border);
-      border-radius:14px;
-      font-weight:600;
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:16px;
+    }
+    .linkish{
+      color:var(--primary);
       font-size:14px;
-      padding:10px 14px;
-      background:#f9fafb;
-      color:#111827;
-      cursor:pointer;
-      margin-top:10px;
+      text-decoration:none;
+      font-weight:600;
     }
   </style>
 </head>
-<body data-demo-otp="<?php echo htmlspecialchars($demoOtp, ENT_QUOTES); ?>">
-  <div class="app otp-card card">
-    <div class="section">
+<body>
+  <div class="app">
+    <div class="otp-card card">
+      <div class="section">
 
-      <div class="otp-title">Enter OTP</div>
-      <div class="otp-sub">
-        We sent a 6-digit code to <?php echo htmlspecialchars($phoneMask); ?> via
-        <?php echo htmlspecialchars($method); ?>.
+        <div class="topbar">
+          <a class="linkish" href="bill-payment-overview.php">← Back</a>
+        </div>
+
+        <div class="otp-title">Enter OTP</div>
+        <div class="otp-sub">
+          We sent a 6-digit code to <?php echo htmlspecialchars($phoneMask); ?> via
+          <?php echo htmlspecialchars($method); ?>.
+        </div>
+
+        <?php if ($infoMsg): ?>
+          <div class="info"><?php echo htmlspecialchars($infoMsg); ?></div>
+        <?php endif; ?>
+
+        <form method="post">
+          <input
+            type="password"
+            name="otp"
+            maxlength="6"
+            class="otp-input"
+            placeholder="••••••"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="one-time-code"
+          >
+          <?php if ($error): ?>
+            <div class="error"><?php echo htmlspecialchars($error); ?></div>
+          <?php endif; ?>
+
+          <button class="btnPrimary" type="submit" name="verify_otp" value="1">
+            Verify & Pay
+          </button>
+        </form>
+
       </div>
-
-      <?php if ($infoMsg): ?>
-        <div class="info"><?php echo htmlspecialchars($infoMsg); ?></div>
-      <?php endif; ?>
-
-      <form method="post">
-        <input
-          type="text"
-          name="otp"
-          maxlength="6"
-          class="otp-input"
-          placeholder="••••••"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-        >
-        <?php if ($error): ?>
-          <div class="error"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
-
-        <button class="btnPrimary" type="submit" name="verify_otp" value="1">
-          Verify & Pay
-        </button>
-
-        <!-- DEV ONLY: JS helper to auto-fill demo OTP -->
-        <button class="btnSecondary" type="button" id="fillDemoOtp">
-          Fill Demo OTP (Dev)
-        </button>
-
-        <?php if ($demoOtp !== ''): ?>
-          <div class="info">Demo OTP: <strong><?php echo htmlspecialchars($demoOtp); ?></strong></div>
-        <?php endif; ?>
-      </form>
-
     </div>
   </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function(){
-    var demoOtp   = (document.body.dataset.demoOtp || '').trim();
-    var btn       = document.getElementById('fillDemoOtp');
-    var otpInput  = document.querySelector('input[name="otp"]');
-
-    if (btn && otpInput && demoOtp) {
-      btn.addEventListener('click', function(){
-        otpInput.value = demoOtp;
-        otpInput.focus();
-      });
-    }
-  });
-</script>
 </body>
 </html>

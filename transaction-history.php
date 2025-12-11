@@ -19,61 +19,71 @@ if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
 }
 
-$cid = $_SESSION['cid'];
+// Raw cid from session
+$cid    = $_SESSION['cid'];
+$cidInt = (int)$cid;      // For tables where cid is INT
+$cidStr = (string)$cid;   // For tables where cid is VARCHAR
 
 // ---------- FETCH TRANSACTIONS ----------
 
-// Add Money transactions
+// ADD MONEY (cid is INT)
 $addMoney = [];
-$sql = "SELECT * FROM add_money_transactions WHERE cid=? ORDER BY created_at DESC";
+$sql = "SELECT * FROM add_money_transactions WHERE cid = ? ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $cid);
+$stmt->bind_param("i", $cidInt);
 $stmt->execute();
 $res = $stmt->get_result();
-while ($r = $res->fetch_assoc()) $addMoney[] = $r;
-$stmt->close();
-
-// Bank transfers
-$bankTransfers = [];
-$sql = "SELECT * FROM bank_transfers WHERE cid = ? ORDER BY created_at DESC";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $cid);
-$stmt->execute();
-$res = $stmt->get_result();
-while ($r = $res->fetch_assoc()) {
-    $bankTransfers[] = $r;
+while ($row = $res->fetch_assoc()) {
+    $addMoney[] = $row;
 }
 $stmt->close();
 
-// MFS transfers
+// BANK TRANSFERS (cid is INT)
+$bankTransfers = [];
+$sql = "SELECT * FROM bank_transfers WHERE cid = ? ORDER BY created_at DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $cidInt);
+$stmt->execute();
+$res = $stmt->get_result();
+while ($row = $res->fetch_assoc()) {
+    $bankTransfers[] = $row;
+}
+$stmt->close();
+
+// MFS TRANSFERS (cid is VARCHAR)
 $mfsTransfers = [];
-$sql = "SELECT * FROM mfs_transfers WHERE cid=? ORDER BY created_at DESC";
+$sql = "SELECT * FROM mfs_transfers WHERE cid = ? ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $cid);
-$stmt->execute();
-$res = $stmt->get_result();
-while ($r = $res->fetch_assoc()) $mfsTransfers[] = $r;
-$stmt->close();
-
-// Bill payments
-$billPayments = [];
-$sql = "SELECT * FROM bill_payments WHERE cid=? ORDER BY created_at DESC";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $cid);
-$stmt->execute();
-$res = $stmt->get_result();
-while ($r = $res->fetch_assoc()) $billPayments[] = $r;
-$stmt->close();
-
-// Mobile recharges (cid is VARCHAR(20) in table, so bind as string) :contentReference[oaicite:1]{index=1}
-$mobileRecharges = [];
-$sql = "SELECT * FROM mobile_recharges WHERE cid=? ORDER BY created_at DESC";
-$stmt = $conn->prepare($sql);
-$cidStr = (string)$cid;
 $stmt->bind_param("s", $cidStr);
 $stmt->execute();
 $res = $stmt->get_result();
-while ($r = $res->fetch_assoc()) $mobileRecharges[] = $r;
+while ($row = $res->fetch_assoc()) {
+    $mfsTransfers[] = $row;
+}
+$stmt->close();
+
+// MOBILE RECHARGES (cid is VARCHAR)
+$mobileRecharges = [];
+$sql = "SELECT * FROM mobile_recharges WHERE cid = ? ORDER BY created_at DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $cidStr);
+$stmt->execute();
+$res = $stmt->get_result();
+while ($row = $res->fetch_assoc()) {
+    $mobileRecharges[] = $row;
+}
+$stmt->close();
+
+// BILL PAYMENTS (cid is VARCHAR)
+$billPayments = [];
+$sql = "SELECT * FROM bill_payments WHERE cid = ? ORDER BY created_at DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $cidStr);
+$stmt->execute();
+$res = $stmt->get_result();
+while ($row = $res->fetch_assoc()) {
+    $billPayments[] = $row;
+}
 $stmt->close();
 
 ?>
@@ -261,8 +271,8 @@ $stmt->close();
         <table>
           <thead>
             <tr>
-              <th>CID</th>
-              <th>Type</th>
+              <th>Tx ID</th>
+              <!---<th>Type</th>-->
               <th>From</th>
               <th>To</th>
               <th>Amount</th>
@@ -274,8 +284,7 @@ $stmt->close();
           <tbody>
           <?php foreach ($bankTransfers as $t): ?>
             <tr>
-              <td><?= $t['cid'] ?></td>
-              <td><?= htmlspecialchars($t['transfer_type']) ?></td>
+              <td><?= $t['ref_id'] ?></td>
               <td><?= htmlspecialchars($t['from_acc']) ?></td>
               <td><?= htmlspecialchars($t['to_acc']) ?></td>
               <td><?= number_format($t['amount'], 2) ?></td>

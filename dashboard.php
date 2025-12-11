@@ -83,13 +83,13 @@ $conn->close();
   <!-- Header -->
   <header style="text-align:center; padding:20px 0;">
       
-      <!-- Bank Logo -->
+      <!-- Bank Logo 
       <img src="Abstract-humming-bird-colorful-logo-on-transparent-background-PNG.png" 
           alt="Bank Logo"
-          style="width:90px; height:auto; margin-bottom:10px;">
+          style="width:90px; height:auto; margin-bottom:10px;">-->
 
       <!-- Bank Name -->
-      <!--<h1 style="color:white; margin:0; font-size:32px;">? Bank</h1>-->
+      <h1 style="color:white; margin:0; font-size:32px;">?Astra Bank</h1>
 
       <!-- Account Details -->
       <p style="text-align:center; color:#FFFFFF; line-height:1.6; margin-top:10px;">
@@ -175,7 +175,7 @@ $conn->close();
 
     <a href="astra-locator.php" class="card">
       <i class="fa-solid fa-location-dot fa-3x"></i>
-      <h3>Find SBL</h3>
+      <h3>Find Astra</h3>
       <p>Find our branches, offices, agent banking outlets and others</p>
     </a>
   </section>

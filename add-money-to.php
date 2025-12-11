@@ -36,7 +36,8 @@ $stmt = $conn->prepare("
 ");
 if (!$stmt) die("Prepare failed: ".$conn->error);
 
-$stmt->bind_param("i", $cid);
+// CustomerID is VARCHAR in your schema → use "s"
+$stmt->bind_param("s", $cid);
 $stmt->execute();
 $res = $stmt->get_result();
 
@@ -50,6 +51,7 @@ $stmt->close();
 
 /* -------------------------------------------
    LOAD OTHER DBL ACCOUNTS (EXCLUDE MINE)
+   (currently not shown in UI, but kept for future)
 --------------------------------------------*/
 $otherAccounts = [];
 $otherNames = [];
@@ -60,7 +62,8 @@ $stmt = $conn->prepare("
     WHERE CustomerID <> ?
     ORDER BY AccountNo ASC
 ");
-$stmt->bind_param("i", $cid);
+// CustomerID is VARCHAR → "s"
+$stmt->bind_param("s", $cid);
 $stmt->execute();
 $r2 = $stmt->get_result();
 
@@ -104,6 +107,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>Add To — Account</title>
   <link rel="stylesheet" href="transfer.css">
   <style>
+    /* DASHBOARD-THEME BACKGROUND + CENTERED CARD */
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 12px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background:#ffffff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Existing local styles */
     .tabs{display:flex; gap:14px; margin-bottom:8px}
     .tab{padding:10px 14px; border:1px solid var(--border); border-radius:999px; cursor:pointer; font-weight:700}
     .tab[aria-selected="true"]{background:var(--primary); color:#fff; border-color:var(--primary)}
@@ -124,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="section">
 
         <div class="tabs">
-          <button id="myTab"    class="tab" aria-selected="true"  type="button">My Account</button>
+          <button id="myTab" class="tab" aria-selected="true" type="button">My Account</button>
         </div>
 
         <?php if($error): ?>
@@ -156,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="name" id="accName">
                   ACCOUNT HOLDER : SELECT ACCOUNT
                 </div>
-                <div class="kv" id="accType">My Account</div>
+                <div class="kv" id="accType"></div>
               </div>
             </div>
           </div>

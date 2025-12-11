@@ -89,7 +89,7 @@ $conn->close();
           style="width:90px; height:auto; margin-bottom:10px;">-->
 
       <!-- Bank Name -->
-      <h1 style="color:white; margin:0; font-size:32px;">?Astra Bank</h1>
+      <h1 style="color:white; margin:0; font-size:32px;">Astra Bank PLC</h1>
 
       <!-- Account Details -->
       <p style="text-align:center; color:#FFFFFF; line-height:1.6; margin-top:10px;">

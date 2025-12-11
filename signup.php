@@ -27,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $terms          = isset($_POST['terms']);
 
     // ---- SERVER-SIDE VALIDATION ----
-
     if ($account_number === '') {
         $errors[] = "Bank account number is required.";
     }
@@ -110,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = "Failed to prepare account verification query.";
             }
 
-            // 2) Check if this CID already exists in `user` (iCloud portal)
+            // 2) Check if this CID already exists in `user` (Astra portal)
             if (!$errors) {
                 $stmt = $conn->prepare("SELECT cid FROM user WHERE cid = ?");
                 if ($stmt) {
@@ -118,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute();
                     $stmt->store_result();
                     if ($stmt->num_rows > 0) {
-                        $errors[] = "This Customer ID is already registered for iCloud portal.";
+                        $errors[] = "This Customer ID is already registered for the online portal.";
                     }
                     $stmt->close();
                 } else {
@@ -141,8 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($stmt) {
                     $stmt->bind_param("issss", $cid, $phone, $email, $password, $user_type);
                     if ($stmt->execute()) {
-                        $success = "Your iCloud portal account has been created. You can now log in.";
-                        // If you want auto-redirect to login:
+                        $success = "Your Astra Bank Customer Portal account has been created. You can now log in.";
+                        // Optionally auto-redirect:
                         // header("Location: login.php");
                         // exit;
                     } else {
@@ -164,37 +163,311 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up — iCloud Customer Portal</title>
+  <title>Sign Up — Astra Bank Customer Portal</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    :root {
+      --primary:#00416A;
+      --accent:#00A1FF;
+      --bg:#F3F6F9;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --radius:14px;
+    }
+    * {
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #00416A, #E4E5E6);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      color:#111827;
+    }
+    .topbar {
+      width:100%;
+      background:rgba(0,0,0,0.15);
+      backdrop-filter:blur(8px);
+      padding:14px 0;
+      border-bottom:1px solid rgba(255,255,255,0.3);
+    }
+    .container {
+      width:95%;
+      max-width:1100px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#fff;
+      font-weight:700;
+      font-size:20px;
+    }
+    .logo {
+      background:#ffffff;
+      color:#00416A;
+      border-radius:50%;
+      width:36px;
+      height:36px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:17px;
+    }
+    .brand-text {
+      letter-spacing:.02em;
+    }
+    .nav a {
+      color:#f9fafb;
+      text-decoration:none;
+      margin:0 10px;
+      font-weight:500;
+      opacity:.9;
+      font-size:14px;
+    }
+    .nav a[aria-current="page"] {
+      text-decoration:underline;
+      opacity:1;
+    }
+    .nav a:hover {
+      opacity:1;
+      text-decoration:underline;
+    }
+    main {
+      flex:1;
+      width:95%;
+      max-width:1100px;
+      margin:0 auto;
+      padding:30px 0 60px;
+      color:#111827;
+    }
+
+    h1 {
+      color:#ffffff;
+      font-size:28px;
+      font-weight:800;
+      margin:0 0 8px;
+      text-shadow:0 1px 3px rgba(0,0,0,0.35);
+    }
+    .intro {
+      color:#e5e7eb;
+      margin:0 0 20px;
+      font-size:14px;
+      max-width:700px;
+    }
+    .intro a {
+      color:#facc15;
+      text-decoration:underline;
+    }
+
+    .form-card {
+      background:#ffffff;
+      border-radius:var(--radius);
+      padding:22px 20px 24px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.25);
+      border:1px solid rgba(255,255,255,0.7);
+    }
+
+    fieldset.fieldset {
+      border:none;
+      margin:0 0 18px;
+      padding:12px 0 0;
+      border-top:1px solid var(--border);
+    }
+    fieldset.fieldset:first-of-type {
+      border-top:none;
+      padding-top:0;
+    }
+    legend {
+      font-size:14px;
+      font-weight:700;
+      color:#111827;
+      padding:0 3px;
+    }
+
+    .row {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+      margin-top:10px;
+    }
+    @media (max-width:900px){
+      .row { grid-template-columns:1fr; }
+    }
+
+    .field {
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      font-size:13px;
+    }
+    .field span {
+      font-weight:600;
+      color:#374151;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:14px;
+      outline:none;
+      background:#f9fafb;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(0,161,255,0.25);
+      background:#ffffff;
+    }
+
+    .help-text {
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .checkbox {
+      font-size:13px;
+      color:#374151;
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+      margin-top:6px;
+    }
+    .checkbox input {
+      margin-top:2px;
+    }
+    .checkbox a {
+      color:var(--primary);
+      text-decoration:underline;
+    }
+
+    .actions {
+      margin-top:14px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn {
+      padding:9px 18px;
+      border-radius:999px;
+      border:none;
+      background:var(--accent);
+      color:#ffffff;
+      font-weight:600;
+      font-size:14px;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+    }
+    .btn:hover {
+      filter:brightness(1.05);
+    }
+    .btn-outline {
+      background:transparent;
+      color:#ffffff;
+      border:1.5px solid #ffffff;
+    }
+    .btn-outline:hover {
+      background:rgba(255,255,255,0.18);
+    }
+
+    .alert-error {
+      background:#fee2e2;
+      border:1px solid #fca5a5;
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:13px;
+      color:#b91c1c;
+    }
+    .alert-success {
+      background:#dcfce7;
+      border:1px solid #86efac;
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:13px;
+      color:#166534;
+    }
+
+    .footer {
+      background:rgba(0,0,0,0.2);
+      color:#e5e7eb;
+      padding:14px 0;
+      margin-top:auto;
+      backdrop-filter:blur(6px);
+      font-size:13px;
+    }
+    .footer-inner {
+      width:95%;
+      max-width:1100px;
+      margin:0 auto;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .footer-links a {
+      color:#e5e7eb;
+      text-decoration:none;
+      margin-left:10px;
+      opacity:.85;
+    }
+    .footer-links a:hover {
+      opacity:1;
+      text-decoration:underline;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- TOP NAV -->
   <header class="topbar">
     <div class="container">
       <div class="brand">
-        <span class="logo">MB</span>
-        <span class="brand-text">My Bank</span>
+        <span class="logo">AB</span>
+        <span class="brand-text">Astra Bank</span>
       </div>
       <nav class="nav">
-        <a href="index.html">Home</a>
-        <a href="open-account.html">Open an Account</a>
+        <a href="index.php">Home</a>
+        <a href="open-account.php">Open an Account</a>
         <a href="#" aria-current="page">Sign Up</a>
         <a href="#">Support</a>
       </nav>
     </div>
   </header>
 
-  <main class="container" style="padding:30px 0 60px;">
-    <h1 style="color:#4b248c;margin:0 0 8px;">Create Your iCloud Portal Account</h1>
-    <p style="color:#5e5e6a;margin:0 0 20px;">
-      For existing Shanto Bank customers who don’t have an iCloud portal account. New to Shanto Bank?
-      <a href="open-account.html">Open a bank account</a> first.
+  <!-- MAIN CONTENT -->
+  <main>
+    <h1>Create Your Customer Portal Account</h1>
+    <p class="intro">
+      For existing Astra Bank customers who don’t have an online portal account yet.
+      New to Astra Bank?
+      <a href="open-account.php">Open a bank account</a> first.
     </p>
 
     <?php if ($errors): ?>
-      <div class="alert alert-error" style="margin-bottom:16px; color:#b00020;">
+      <div class="alert-error" style="margin-bottom:16px;">
         <ul style="margin:0; padding-left:18px;">
           <?php foreach ($errors as $e): ?>
             <li><?= htmlspecialchars($e) ?></li>
@@ -204,7 +477,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <?php if ($success): ?>
-      <div class="alert alert-success" style="margin-bottom:16px; color:#1b5e20;">
+      <div class="alert-success" style="margin-bottom:16px;">
         <?= htmlspecialchars($success) ?>
       </div>
     <?php endif; ?>
@@ -290,22 +563,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </fieldset>
 
       <div class="actions">
-        <a class="btn btn-outline" href="index.html">Back</a>
-        <button class="btn" type="submit">Create iCloud Account</button>
+        <a class="btn btn-outline" href="index.php">Back</a>
+        <button class="btn" type="submit">Create Portal Account</button>
       </div>
 
-      <p class="help-text">You’ll receive a verification code to activate your iCloud portal access.</p>
+      <p class="help-text">You’ll receive a verification code to activate your Astra Bank Customer Portal access.</p>
     </form>
   </main>
 
+  <!-- FOOTER -->
   <footer class="footer">
-    <div class="container footer-inner">
-      <p>© <span id="year"></span> Shanto Bank.</p>
-      <div class="footer-links"><a href="#">Privacy</a><a href="#">Terms</a></div>
+    <div class="footer-inner">
+      <p>© <span id="year"></span> Astra Bank.</p>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
     </div>
   </footer>
 
-  <!-- Tiny inline script ONLY for year; no form blocking -->
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>

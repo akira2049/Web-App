@@ -838,10 +838,10 @@ if ($res = $conn->query($sql)) {
 <div class="admin-layout">
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">AD</div>
+      <div class="sidebar-logo">AB</div>
       <div class="sidebar-title">
         <span>Admin Panel</span>
-        <span>My Banking</span>
+        <span>Astra Bank</span>
       </div>
     </div>
 

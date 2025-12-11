@@ -284,12 +284,12 @@ if ($cardNo !== "") {
 
         <div class="form-group full">
           <label for="reason">Reason (optional)</label>
-          <input type="text" id="reason" name="reason" placeholder="e.g. lost card">
+          <input type="text" id="reason" name="reason" placeholder="">
         </div>
 
         <div class="form-group full">
           <label for="remarks">Remarks</label>
-          <textarea id="remarks" name="remarks" placeholder="Internal notes (not saved in this demo)"></textarea>
+          <textarea id="remarks" name="remarks" placeholder=""></textarea>
         </div>
 
         <div class="actions">

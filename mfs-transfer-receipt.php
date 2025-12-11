@@ -33,8 +33,6 @@ if ($conn->connect_error) {
 
   accounts:
     AccountNo, account_name, Email, Phone, ...
-
-  We join accounts just to show the account holder name + contact.
 */
 
 $sql = "
@@ -107,7 +105,7 @@ $pdf->Cell(0, 6, "Transaction ID: " . $tx['tx_id'], 0, 1);
 $pdf->Cell(0, 6, "Date & Time: " . $createdAtStr, 0, 1);
 $pdf->Ln(4);
 
-// ---------- TRANSFER DETAILS ----------
+// ---------- TRANSFER DETAILS (TABLE STYLE) ----------
 $fromAcc    = $tx['from_acc']        ?? 'N/A';
 $walletType = $tx['wallet_type']     ?? 'N/A';
 $walletNo   = $tx['wallet_number']   ?? 'N/A';
@@ -123,25 +121,37 @@ $note       = trim($tx['note'] ?? '');
 
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 7, "Transfer Details", 0, 1);
+$pdf->Ln(1);
+
+/* Table column widths */
+$col1 = 60;   // Field
+$col2 = 130;  // Details
+
+// Table header
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->SetFillColor(230, 230, 230);
+$pdf->Cell($col1, 8, 'Field',   1, 0, 'L', true);
+$pdf->Cell($col2, 8, 'Details', 1, 1, 'L', true);
+
+// Table body
 $pdf->SetFont('Arial', '', 10);
 
-// simple key-value rows
-function kvRow($pdf, $label, $value) {
-    $pdf->Cell(45, 6, $label, 0, 0);
-    $pdf->Cell(0, 6, ": " . $value, 0, 1);
+function mfsTableRow($pdf, $label, $value, $col1, $col2) {
+    $pdf->Cell($col1, 8, $label, 1, 0, 'L');
+    $pdf->Cell($col2, 8, $value, 1, 1, 'L');
 }
 
-kvRow($pdf, "From Account",      $fromAcc);
-kvRow($pdf, "Wallet Type",       $walletType);
-kvRow($pdf, "Wallet Number",     $walletNo);
-kvRow($pdf, "Amount",            number_format($amount, 2) . " BDT");
-kvRow($pdf, "Fee",               number_format($fee, 2) . " BDT");
-kvRow($pdf, "Total Debited",     number_format($totalDebit, 2) . " BDT");
-kvRow($pdf, "Balance Before",    number_format($fromBefore, 2) . " BDT");
-kvRow($pdf, "Balance After",     number_format($fromAfter, 2) . " BDT");
+mfsTableRow($pdf, "From Account",    $fromAcc,                                    $col1, $col2);
+mfsTableRow($pdf, "Wallet Type",     $walletType,                                 $col1, $col2);
+mfsTableRow($pdf, "Wallet Number",   $walletNo,                                   $col1, $col2);
+mfsTableRow($pdf, "Amount",          number_format($amount, 2) . " BDT",         $col1, $col2);
+mfsTableRow($pdf, "Fee",             number_format($fee, 2) . " BDT",            $col1, $col2);
+mfsTableRow($pdf, "Total Debited",   number_format($totalDebit, 2) . " BDT",     $col1, $col2);
+mfsTableRow($pdf, "Balance Before",  number_format($fromBefore, 2) . " BDT",     $col1, $col2);
+mfsTableRow($pdf, "Balance After",   number_format($fromAfter, 2) . " BDT",      $col1, $col2);
 
 if ($note !== "") {
-    kvRow($pdf, "Note", $note);
+    mfsTableRow($pdf, "Note", $note, $col1, $col2);
 }
 
 $pdf->Ln(10);
